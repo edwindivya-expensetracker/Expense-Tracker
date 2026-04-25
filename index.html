@@ -1042,12 +1042,18 @@ function loadLocal() {
     const raw = localStorage.getItem(LS_KEY);
     if (raw) { const p = JSON.parse(raw); S = {...S, ...p}; }
   } catch(e){}
+  // Load credentials from their own dedicated keys — survives Safari PWA sessions
+  S.sbUrl = localStorage.getItem('de_sb_url') || S.sbUrl || '';
+  S.sbKey = localStorage.getItem('de_sb_key') || S.sbKey || '';
   if (!S.categories.length) S.categories = [...DEFAULTS.categories];
   if (!S.types.length) S.types = [...DEFAULTS.types];
   if (!S.frequencies.length) S.frequencies = [...DEFAULTS.frequencies];
 }
 
 function saveLocal() {
+  // Store credentials in dedicated keys so they never get wiped
+  if (S.sbUrl) localStorage.setItem('de_sb_url', S.sbUrl);
+  if (S.sbKey) localStorage.setItem('de_sb_key', S.sbKey);
   localStorage.setItem(LS_KEY, JSON.stringify(S));
 }
 
@@ -1121,6 +1127,9 @@ function saveSupabase() {
   const key = document.getElementById('sb-key').value.trim();
   if (!url || !key) return toast('Enter both URL and key', 'err');
   S.sbUrl = url; S.sbKey = key;
+  // Persist credentials immediately in dedicated keys
+  localStorage.setItem('de_sb_url', url);
+  localStorage.setItem('de_sb_key', key);
   saveLocal();
   document.getElementById('setup-step-db').style.display = 'none';
   showPinStep();
