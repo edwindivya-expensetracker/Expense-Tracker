@@ -980,36 +980,10 @@ select.modal-input option { background: white; }
     </div>
 
     <div class="sec-label">Paid By</div>
-    <div class="fcard" style="padding:4px 16px">
-      <div class="split-item">
-        <div><div class="split-name">Edwin</div><div class="split-pct" id="d-ep">0%</div></div>
-        <div class="split-amt" id="d-ea">₹0</div>
-      </div>
-      <div class="split-item">
-        <div><div class="split-name">Divya</div><div class="split-pct" id="d-dp">0%</div></div>
-        <div class="split-amt" id="d-da">₹0</div>
-      </div>
-    </div>
+    <div class="fcard" style="padding:4px 16px" id="d-paid-list"></div>
 
     <div class="sec-label">Expense For</div>
-    <div class="fcard" style="padding:4px 16px">
-      <div class="split-item">
-        <div><div class="split-name">Both</div><div class="split-pct" id="d-fb-pct">0%</div></div>
-        <div class="split-amt" id="d-fb">₹0</div>
-      </div>
-      <div class="split-item">
-        <div><div class="split-name">Edwin</div><div class="split-pct" id="d-fe-pct">0%</div></div>
-        <div class="split-amt" id="d-fe">₹0</div>
-      </div>
-      <div class="split-item">
-        <div><div class="split-name">Divya</div><div class="split-pct" id="d-fd-pct">0%</div></div>
-        <div class="split-amt" id="d-fd">₹0</div>
-      </div>
-      <div class="split-item">
-        <div><div class="split-name">AJ</div><div class="split-pct" id="d-fa-pct">0%</div></div>
-        <div class="split-amt" id="d-fa">₹0</div>
-      </div>
-    </div>
+    <div class="fcard" style="padding:4px 16px" id="d-for-list"></div>
     <div style="height:10px"></div>
   </div>
 
@@ -1716,22 +1690,33 @@ function renderDash() {
         </div>`).join('')
     : '<div style="color:var(--ink3);text-align:center;padding:20px 0;font-size:13px">No data for this period</div>';
 
-  // Paid by
-  const ep = es.filter(e => e.paidBy === 'Edwin').reduce((s,e)=>s+Number(e.amount),0);
-  const dp = es.filter(e => e.paidBy === 'Divya').reduce((s,e)=>s+Number(e.amount),0);
-  document.getElementById('d-ea').textContent = '₹' + fmt(ep);
-  document.getElementById('d-da').textContent = '₹' + fmt(dp);
-  document.getElementById('d-ep').textContent = total ? Math.round(ep/total*100) + '%' : '0%';
-  document.getElementById('d-dp').textContent = total ? Math.round(dp/total*100) + '%' : '0%';
+  // Paid by — sorted descending
+  const paidData = ['Edwin','Divya'].map(name => ({
+    name,
+    val: es.filter(e => e.paidBy === name).reduce((s,e)=>s+Number(e.amount),0)
+  })).sort((a,b) => b.val - a.val);
+  document.getElementById('d-paid-list').innerHTML = paidData.map((p,i) => `
+    <div class="split-item" ${i===paidData.length-1?'style="border-bottom:none"':''}>
+      <div>
+        <div class="split-name">${p.name}</div>
+        <div class="split-pct">${total ? Math.round(p.val/total*100) : 0}%</div>
+      </div>
+      <div class="split-amt">₹${fmt(p.val)}</div>
+    </div>`).join('');
 
-  // For whom
-  ['Both','Edwin','Divya','AJ'].forEach(w => {
-    const id = w === 'AJ' ? 'd-fa' : w === 'Both' ? 'd-fb' : w === 'Edwin' ? 'd-fe' : 'd-fd';
-    const pid = id + '-pct';
-    const v = es.filter(e => e.forWhom === w).reduce((s,e)=>s+Number(e.amount),0);
-    document.getElementById(id).textContent = '₹' + fmt(v);
-    document.getElementById(pid).textContent = total ? Math.round(v/total*100) + '%' : '0%';
-  });
+  // For whom — sorted descending
+  const forData = ['Both','Edwin','Divya','AJ'].map(name => ({
+    name,
+    val: es.filter(e => e.forWhom === name).reduce((s,e)=>s+Number(e.amount),0)
+  })).sort((a,b) => b.val - a.val);
+  document.getElementById('d-for-list').innerHTML = forData.map((p,i) => `
+    <div class="split-item" ${i===forData.length-1?'style="border-bottom:none"':''}>
+      <div>
+        <div class="split-name">${p.name}</div>
+        <div class="split-pct">${total ? Math.round(p.val/total*100) : 0}%</div>
+      </div>
+      <div class="split-amt">₹${fmt(p.val)}</div>
+    </div>`).join('');
 }
 
 // ══════════════════════════════════════════════════
