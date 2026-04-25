@@ -1,0 +1,1542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>D&E Finance</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f7f4ef;
+  --bg2: #eeeae2;
+  --surface: #ffffff;
+  --border: #ddd9cf;
+  --border2: #ccc7bb;
+  --ink: #1c1a16;
+  --ink2: #6b6456;
+  --ink3: #9c9282;
+  --amber: #c17f2a;
+  --amber-light: #e8a84a;
+  --amber-bg: #fdf3e3;
+  --amber-border: #e8c98a;
+  --red: #c0392b;
+  --green: #2e7d52;
+  --green-bg: #e8f5ee;
+  --blue: #2d6a9f;
+  --blue-bg: #e8f0f8;
+  --pink: #a0456e;
+  --pink-bg: #f8eaf1;
+  --teal: #2d8a7a;
+  --teal-bg: #e8f5f2;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --shadow: 0 2px 12px rgba(0,0,0,0.07);
+  --shadow-md: 0 4px 24px rgba(0,0,0,0.1);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px;
+  min-height: 100vh;
+  padding-bottom: 90px;
+}
+
+/* ── SETUP SCREEN ── */
+#setup-screen {
+  min-height: 100vh;
+  background: var(--ink);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 24px;
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+}
+.setup-logo {
+  font-family: 'Playfair Display', serif;
+  font-size: 42px;
+  color: #f7f4ef;
+  margin-bottom: 6px;
+  letter-spacing: 0.02em;
+}
+.setup-sub {
+  font-size: 13px;
+  color: #9c9282;
+  margin-bottom: 40px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.setup-card {
+  background: #242018;
+  border: 1px solid #3a3528;
+  border-radius: 20px;
+  padding: 24px;
+  width: 100%;
+  max-width: 380px;
+}
+.setup-label {
+  font-size: 12px;
+  color: #9c9282;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 8px;
+}
+.setup-input {
+  width: 100%;
+  background: #1a1814;
+  border: 1px solid #3a3528;
+  color: #f7f4ef;
+  padding: 14px 16px;
+  border-radius: 12px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px;
+  outline: none;
+  margin-bottom: 16px;
+}
+.setup-input:focus { border-color: var(--amber); }
+.setup-input::placeholder { color: #5a5248; }
+.setup-divider {
+  text-align: center;
+  color: #5a5248;
+  font-size: 12px;
+  margin: 4px 0 16px;
+  position: relative;
+}
+.setup-divider::before, .setup-divider::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 40%;
+  height: 1px;
+  background: #3a3528;
+}
+.setup-divider::before { left: 0; }
+.setup-divider::after { right: 0; }
+.setup-btn {
+  width: 100%;
+  padding: 15px;
+  background: var(--amber);
+  color: #1a1814;
+  font-family: 'Outfit', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 12px;
+}
+.setup-btn:active { transform: scale(0.98); }
+.setup-btn.secondary {
+  background: transparent;
+  border: 1px solid #3a3528;
+  color: #9c9282;
+  font-size: 14px;
+  padding: 12px;
+}
+.setup-step {
+  display: none;
+}
+.setup-step.active { display: block; }
+.setup-hint {
+  font-size: 12px;
+  color: #6b6456;
+  line-height: 1.6;
+  margin-top: 16px;
+  padding: 12px;
+  background: #1a1814;
+  border-radius: 10px;
+  border: 1px solid #2e2c26;
+}
+.setup-hint a { color: var(--amber); text-decoration: none; }
+.setup-hint code {
+  background: #0f0e0c;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+}
+.pin-dots {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin: 20px 0;
+}
+.pin-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid #3a3528;
+  background: transparent;
+  transition: all 0.2s;
+}
+.pin-dot.filled { background: var(--amber); border-color: var(--amber); }
+.pin-pad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 8px;
+}
+.pin-key {
+  background: #2a2820;
+  border: 1px solid #3a3528;
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  font-size: 20px;
+  color: #f7f4ef;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: 'Outfit', sans-serif;
+}
+.pin-key:active { background: #3a3528; transform: scale(0.95); }
+.pin-key.del { font-size: 18px; color: #9c9282; }
+.setup-who {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.who-btn {
+  flex: 1;
+  padding: 14px;
+  border-radius: 12px;
+  border: 2px solid #3a3528;
+  background: transparent;
+  color: #9c9282;
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+.who-btn.active {
+  border-color: var(--amber);
+  background: rgba(193,127,42,0.12);
+  color: var(--amber-light);
+}
+
+/* ── MAIN APP ── */
+#app { display: none; }
+#app.visible { display: block; }
+
+/* ── TOPBAR ── */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px 12px;
+  background: var(--bg);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  border-bottom: 1px solid var(--border);
+}
+.topbar-left { display: flex; flex-direction: column; }
+.topbar-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px;
+  color: var(--ink);
+  line-height: 1.1;
+}
+.topbar-sub { font-size: 11px; color: var(--ink3); margin-top: 1px; }
+.topbar-right { display: flex; align-items: center; gap: 10px; }
+.user-pill {
+  background: var(--amber-bg);
+  border: 1px solid var(--amber-border);
+  color: var(--amber);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 20px;
+  letter-spacing: 0.04em;
+}
+.sync-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--ink2);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.sync-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+}
+.sync-dot.offline { background: var(--ink3); }
+.sync-dot.syncing { background: var(--amber); animation: pulse 1s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+/* ── BOTTOM NAV ── */
+.bottom-nav {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  display: flex;
+  padding: 10px 0 24px;
+  z-index: 50;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.06);
+}
+.nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  cursor: pointer;
+  padding: 2px 0;
+}
+.nav-icon { font-size: 22px; }
+.nav-label { font-size: 10px; color: var(--ink3); font-weight: 500; letter-spacing: 0.04em; }
+.nav-item.active .nav-label { color: var(--amber); }
+.nav-active-bar {
+  width: 28px; height: 3px;
+  background: var(--amber);
+  border-radius: 2px;
+  margin-bottom: 2px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.nav-item.active .nav-active-bar { opacity: 1; }
+
+/* ── PAGES ── */
+.page { display: none; padding: 0 16px; animation: fadeIn 0.2s ease; }
+.page.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ── SECTION LABEL ── */
+.sec-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink3);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin: 20px 0 8px 2px;
+}
+
+/* ── FORM CARD ── */
+.fcard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  margin-bottom: 2px;
+}
+.frow {
+  display: flex;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  gap: 12px;
+}
+.frow:last-child { border-bottom: none; }
+.flabel { font-size: 13px; color: var(--ink2); min-width: 105px; flex-shrink: 0; }
+.finput {
+  flex: 1;
+  background: none;
+  border: none;
+  color: var(--ink);
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px;
+  text-align: right;
+  outline: none;
+  -webkit-appearance: none;
+}
+.finput::placeholder { color: var(--ink3); }
+select.finput { cursor: pointer; }
+select.finput option { background: white; color: var(--ink); }
+.amt-sym { font-size: 22px; color: var(--amber); font-weight: 300; }
+
+/* ── PILLS ── */
+.pill-group {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.pill-group:last-child { border-bottom: none; }
+.pill-glabel { font-size: 12px; color: var(--ink3); margin-bottom: 10px; font-weight: 500; }
+.pills { display: flex; flex-wrap: wrap; gap: 8px; }
+.pill {
+  padding: 7px 16px;
+  border-radius: 30px;
+  border: 1.5px solid var(--border2);
+  background: var(--bg);
+  color: var(--ink2);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  user-select: none;
+}
+.pill:active { transform: scale(0.95); }
+.pill.active { background: var(--ink); border-color: var(--ink); color: white; }
+.pill.active.p-edwin { background: var(--blue); border-color: var(--blue); }
+.pill.active.p-divya { background: var(--pink); border-color: var(--pink); }
+.pill.active.p-aj { background: var(--teal); border-color: var(--teal); }
+.pill.active.p-both { background: var(--amber); border-color: var(--amber); color: #1a1200; }
+
+/* ── SUBMIT ── */
+.btn-submit {
+  width: 100%;
+  padding: 17px;
+  background: var(--ink);
+  color: var(--bg);
+  font-family: 'Outfit', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  margin: 18px 0 8px;
+  letter-spacing: 0.04em;
+  transition: all 0.2s;
+  box-shadow: var(--shadow-md);
+}
+.btn-submit:active { transform: scale(0.98); background: #333; }
+
+/* ── LOG ── */
+.log-bar {
+  display: flex;
+  gap: 8px;
+  margin: 14px 0 12px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+.log-chip {
+  padding: 7px 16px;
+  border-radius: 20px;
+  border: 1.5px solid var(--border2);
+  background: var(--surface);
+  color: var(--ink2);
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+.log-chip.active { background: var(--ink); border-color: var(--ink); color: white; }
+
+.entry-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  box-shadow: var(--shadow);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+.entry-left { flex: 1; min-width: 0; }
+.entry-cat { font-size: 15px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+.entry-desc { font-size: 12.5px; color: var(--ink2); margin-bottom: 8px; line-height: 1.4; }
+.entry-chips { display: flex; gap: 5px; flex-wrap: wrap; }
+.echip {
+  font-size: 11px;
+  padding: 3px 9px;
+  border-radius: 20px;
+  border: 1px solid var(--border2);
+  color: var(--ink2);
+  background: var(--bg);
+}
+.echip.for-edwin { background: var(--blue-bg); border-color: #b0cce8; color: var(--blue); }
+.echip.for-divya { background: var(--pink-bg); border-color: #e0b0c8; color: var(--pink); }
+.echip.for-aj { background: var(--teal-bg); border-color: #a0d4cc; color: var(--teal); }
+.echip.for-both { background: var(--amber-bg); border-color: var(--amber-border); color: var(--amber); }
+.echip.paid { font-weight: 600; }
+.echip.saveable { background: var(--green-bg); border-color: #a0d4b8; color: var(--green); }
+.entry-right { text-align: right; flex-shrink: 0; }
+.entry-amount {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px;
+  color: var(--ink);
+  font-weight: 600;
+}
+.entry-date { font-size: 11.5px; color: var(--ink3); margin-top: 3px; }
+.entry-by { font-size: 11px; color: var(--ink3); margin-top: 4px; }
+.no-data {
+  text-align: center;
+  padding: 50px 20px;
+  color: var(--ink3);
+  font-size: 14px;
+  line-height: 2;
+}
+
+/* ── DASHBOARD ── */
+.period-row { display: flex; gap: 8px; margin: 14px 0 16px; }
+.period-btn {
+  flex: 1;
+  padding: 10px 6px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border2);
+  background: var(--surface);
+  color: var(--ink2);
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s;
+}
+.period-btn.active { background: var(--ink); border-color: var(--ink); color: white; }
+
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  box-shadow: var(--shadow);
+}
+.stat-card.full { grid-column: 1/-1; }
+.stat-card.amber { background: var(--amber-bg); border-color: var(--amber-border); }
+.stat-card.green { background: var(--green-bg); border-color: #a0d4b8; }
+.stat-lbl { font-size: 11px; color: var(--ink3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; font-weight: 600; }
+.stat-val {
+  font-family: 'Playfair Display', serif;
+  font-size: 26px;
+  color: var(--ink);
+  line-height: 1;
+}
+.stat-sub { font-size: 12px; color: var(--ink3); margin-top: 5px; }
+
+/* Bar chart */
+.bar-item { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.bar-name { font-size: 12.5px; color: var(--ink2); width: 110px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bar-track { flex: 1; height: 7px; background: var(--bg2); border-radius: 4px; overflow: hidden; }
+.bar-fill { height: 100%; background: var(--amber); border-radius: 4px; transition: width 0.7s cubic-bezier(0.4,0,0.2,1); }
+.bar-val { font-size: 12px; color: var(--ink2); width: 56px; text-align: right; flex-shrink: 0; font-weight: 500; }
+
+/* Split rows */
+.split-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+.split-item:last-child { border-bottom: none; }
+.split-name { font-size: 14px; color: var(--ink); font-weight: 500; }
+.split-pct { font-size: 12px; color: var(--ink3); margin-top: 2px; }
+.split-amt { font-family: 'Playfair Display', serif; font-size: 17px; color: var(--ink); }
+
+/* ── CONFIG ── */
+.cfg-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 14px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.cfg-head {
+  padding: 13px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--bg);
+}
+.cfg-count { font-size: 11px; color: var(--ink3); font-weight: 400; }
+.cfg-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  gap: 10px;
+}
+.cfg-item:last-child { border-bottom: none; }
+.cfg-item-name { flex: 1; font-size: 14px; color: var(--ink); }
+.btn-del {
+  background: none;
+  border: 1px solid #f0c0bb;
+  color: var(--red);
+  padding: 5px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-family: 'Outfit', sans-serif;
+  cursor: pointer;
+}
+.btn-add-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 16px;
+  color: var(--amber);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border-top: 1px solid var(--border);
+}
+.add-icon {
+  width: 24px; height: 24px;
+  background: var(--amber-bg);
+  border: 1px solid var(--amber-border);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--amber);
+  font-size: 16px;
+  font-weight: 700;
+}
+.add-input-row {
+  display: none;
+  padding: 12px 16px;
+  gap: 8px;
+  border-top: 1px solid var(--border);
+}
+.add-input-row.show { display: flex; }
+.cfg-input {
+  flex: 1;
+  background: var(--bg);
+  border: 1.5px solid var(--border2);
+  color: var(--ink);
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  outline: none;
+}
+.cfg-input:focus { border-color: var(--amber); }
+.btn-save-cfg {
+  background: var(--ink);
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'Outfit', sans-serif;
+  cursor: pointer;
+}
+
+/* Supabase config */
+.cfg-setup-note {
+  padding: 14px 16px;
+  font-size: 13px;
+  color: var(--ink2);
+  line-height: 1.6;
+  border-bottom: 1px solid var(--border);
+}
+.cfg-setup-note strong { color: var(--amber); }
+.cfg-setup-note a { color: var(--blue); }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%) translateY(16px);
+  background: var(--ink);
+  color: white;
+  padding: 12px 22px;
+  border-radius: 30px;
+  font-size: 13.5px;
+  font-weight: 500;
+  opacity: 0;
+  transition: all 0.3s;
+  z-index: 500;
+  pointer-events: none;
+  white-space: nowrap;
+  box-shadow: var(--shadow-md);
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.ok { background: var(--green); }
+.toast.err { background: var(--red); }
+
+/* ── LOGOUT ── */
+.logout-btn {
+  background: none;
+  border: 1.5px solid var(--border2);
+  color: var(--ink2);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-family: 'Outfit', sans-serif;
+  cursor: pointer;
+}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════
+     SETUP / LOGIN SCREEN
+════════════════════════════════════════ -->
+<div id="setup-screen">
+  <div class="setup-logo">D & E</div>
+  <div class="setup-sub">Family Finance · FY 2026–27</div>
+
+  <!-- Step 1: Supabase config (first run only) -->
+  <div class="setup-card" id="setup-step-db" style="display:none">
+    <div class="setup-label">Step 1 of 2 — Connect Database</div>
+    <div style="height:12px"></div>
+    <div class="setup-label">Supabase Project URL</div>
+    <input class="setup-input" id="sb-url" placeholder="https://xxxx.supabase.co" autocomplete="off" autocorrect="off" autocapitalize="off">
+    <div class="setup-label">Supabase Anon Key</div>
+    <input class="setup-input" id="sb-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..." autocomplete="off" autocorrect="off" autocapitalize="off">
+    <button class="setup-btn" onclick="saveSupabase()">Save & Continue</button>
+    <div class="setup-hint">
+      1. Go to <strong>supabase.com</strong> → New project (free)<br>
+      2. Settings → API → copy <strong>Project URL</strong> and <strong>anon public key</strong><br>
+      3. Run the SQL below in Supabase SQL Editor once:<br><br>
+      <code>create table expenses (id bigint primary key, date text, amount numeric, category text, type text, freq text, for_whom text, paid_by text, saving text, desc text, month text, added_by text, created_at timestamptz default now());</code>
+    </div>
+  </div>
+
+  <!-- Step 2: Who are you + PIN -->
+  <div class="setup-card" id="setup-step-pin" style="display:none">
+    <div class="setup-label" id="pin-step-label">Who are you?</div>
+    <div style="height:10px"></div>
+    <div class="setup-who" id="who-select">
+      <button class="who-btn active" data-who="Edwin" onclick="selectWho(this)">Edwin</button>
+      <button class="who-btn" data-who="Divya" onclick="selectWho(this)">Divya</button>
+    </div>
+    <div class="setup-label">Enter Family PIN</div>
+    <div class="pin-dots" id="pin-dots">
+      <div class="pin-dot"></div>
+      <div class="pin-dot"></div>
+      <div class="pin-dot"></div>
+      <div class="pin-dot"></div>
+    </div>
+    <div class="pin-pad">
+      <div class="pin-key" onclick="pinKey('1')">1</div>
+      <div class="pin-key" onclick="pinKey('2')">2</div>
+      <div class="pin-key" onclick="pinKey('3')">3</div>
+      <div class="pin-key" onclick="pinKey('4')">4</div>
+      <div class="pin-key" onclick="pinKey('5')">5</div>
+      <div class="pin-key" onclick="pinKey('6')">6</div>
+      <div class="pin-key" onclick="pinKey('7')">7</div>
+      <div class="pin-key" onclick="pinKey('8')">8</div>
+      <div class="pin-key" onclick="pinKey('9')">9</div>
+      <div class="pin-key" onclick="pinKey('')"></div>
+      <div class="pin-key" onclick="pinKey('0')">0</div>
+      <div class="pin-key del" onclick="pinDel()">⌫</div>
+    </div>
+    <div style="height:10px"></div>
+    <div id="pin-hint" style="font-size:12px;color:#9c9282;text-align:center;min-height:18px"></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     MAIN APP
+════════════════════════════════════════ -->
+<div id="app">
+
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-title">D & E Finance</div>
+      <div class="topbar-sub">FY 2026–27</div>
+    </div>
+    <div class="topbar-right">
+      <div class="sync-btn" onclick="syncNow()">
+        <div class="sync-dot" id="sync-dot"></div>
+        <span id="sync-label">Sync</span>
+      </div>
+      <div class="user-pill" id="user-pill">—</div>
+      <button class="logout-btn" onclick="logout()">Exit</button>
+    </div>
+  </div>
+
+  <!-- ADD PAGE -->
+  <div id="page-add" class="page active">
+    <div class="sec-label">Amount</div>
+    <div class="fcard">
+      <div class="frow">
+        <span class="amt-sym">₹</span>
+        <input class="finput" id="f-amount" type="number" inputmode="decimal" placeholder="0.00" style="font-size:30px;font-weight:300">
+      </div>
+    </div>
+
+    <div class="sec-label">Category</div>
+    <div class="fcard">
+      <div class="frow">
+        <span class="flabel">Category</span>
+        <select class="finput" id="f-cat"></select>
+      </div>
+      <div class="frow">
+        <span class="flabel">Type</span>
+        <select class="finput" id="f-type"></select>
+      </div>
+      <div class="frow">
+        <span class="flabel">Frequency</span>
+        <select class="finput" id="f-freq"></select>
+      </div>
+    </div>
+
+    <div class="sec-label">People</div>
+    <div class="fcard">
+      <div class="pill-group">
+        <div class="pill-glabel">Expense For</div>
+        <div class="pills">
+          <div class="pill p-both active" data-g="for" data-v="Both" onclick="pickPill(this)">Both</div>
+          <div class="pill p-edwin" data-g="for" data-v="Edwin" onclick="pickPill(this)">Edwin</div>
+          <div class="pill p-divya" data-g="for" data-v="Divya" onclick="pickPill(this)">Divya</div>
+          <div class="pill p-aj" data-g="for" data-v="AJ" onclick="pickPill(this)">AJ</div>
+        </div>
+      </div>
+      <div class="pill-group">
+        <div class="pill-glabel">Paid By</div>
+        <div class="pills">
+          <div class="pill p-edwin active" data-g="paid" data-v="Edwin" onclick="pickPill(this)">Edwin</div>
+          <div class="pill p-divya" data-g="paid" data-v="Divya" onclick="pickPill(this)">Divya</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec-label">Details</div>
+    <div class="fcard">
+      <div class="frow">
+        <span class="flabel">Date</span>
+        <input class="finput" id="f-date" type="date">
+      </div>
+      <div class="frow">
+        <span class="flabel">Description</span>
+        <input class="finput" id="f-desc" type="text" placeholder="Brief note…">
+      </div>
+      <div class="pill-group">
+        <div class="pill-glabel">Possible Saving?</div>
+        <div class="pills">
+          <div class="pill" data-g="saving" data-v="Yes" onclick="pickPill(this)">Yes</div>
+          <div class="pill active" data-g="saving" data-v="No" onclick="pickPill(this)">No</div>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-submit" onclick="submitExpense()">Save Expense</button>
+  </div>
+
+  <!-- LOG PAGE -->
+  <div id="page-log" class="page">
+    <div class="log-bar">
+      <div class="log-chip active" data-f="All" onclick="setLogFilter(this)">All</div>
+      <div class="log-chip" data-f="Edwin" onclick="setLogFilter(this)">Edwin</div>
+      <div class="log-chip" data-f="Divya" onclick="setLogFilter(this)">Divya</div>
+      <div class="log-chip" data-f="AJ" onclick="setLogFilter(this)">AJ</div>
+      <div class="log-chip" data-f="Both" onclick="setLogFilter(this)">Both</div>
+    </div>
+    <div id="log-list"></div>
+  </div>
+
+  <!-- DASHBOARD PAGE -->
+  <div id="page-dash" class="page">
+    <div class="period-row">
+      <div class="period-btn active" onclick="setPeriod('month',this)">Month</div>
+      <div class="period-btn" onclick="setPeriod('quarter',this)">Quarter</div>
+      <div class="period-btn" onclick="setPeriod('year',this)">Full Year</div>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-card amber full">
+        <div class="stat-lbl">Total Spent</div>
+        <div class="stat-val" id="d-total">₹0</div>
+        <div class="stat-sub" id="d-entries-sub">0 entries</div>
+      </div>
+    </div>
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-lbl">Avg / Entry</div>
+        <div class="stat-val" id="d-avg">₹0</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-lbl">Saveable</div>
+        <div class="stat-val" id="d-save">₹0</div>
+      </div>
+    </div>
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-lbl">Essentials</div>
+        <div class="stat-val" id="d-ess">₹0</div>
+        <div class="stat-sub" id="d-ess-pct">0%</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-lbl">Fun & Others</div>
+        <div class="stat-val" id="d-fun">₹0</div>
+        <div class="stat-sub" id="d-fun-pct">0%</div>
+      </div>
+    </div>
+
+    <div class="sec-label">Top Categories</div>
+    <div class="fcard" style="padding:16px">
+      <div id="d-bars"></div>
+    </div>
+
+    <div class="sec-label">Paid By</div>
+    <div class="fcard" style="padding:4px 16px">
+      <div class="split-item">
+        <div><div class="split-name">Edwin</div><div class="split-pct" id="d-ep">0%</div></div>
+        <div class="split-amt" id="d-ea">₹0</div>
+      </div>
+      <div class="split-item">
+        <div><div class="split-name">Divya</div><div class="split-pct" id="d-dp">0%</div></div>
+        <div class="split-amt" id="d-da">₹0</div>
+      </div>
+    </div>
+
+    <div class="sec-label">Expense For</div>
+    <div class="fcard" style="padding:4px 16px">
+      <div class="split-item">
+        <div class="split-name">Both</div>
+        <div class="split-amt" id="d-fb">₹0</div>
+      </div>
+      <div class="split-item">
+        <div class="split-name">Edwin</div>
+        <div class="split-amt" id="d-fe">₹0</div>
+      </div>
+      <div class="split-item">
+        <div class="split-name">Divya</div>
+        <div class="split-amt" id="d-fd">₹0</div>
+      </div>
+      <div class="split-item">
+        <div class="split-name">AJ</div>
+        <div class="split-amt" id="d-fa">₹0</div>
+      </div>
+    </div>
+    <div style="height:10px"></div>
+  </div>
+
+  <!-- CONFIG PAGE -->
+  <div id="page-cfg" class="page">
+    <div style="height:14px"></div>
+
+    <!-- Supabase -->
+    <div class="cfg-card">
+      <div class="cfg-head">Database Connection</div>
+      <div class="cfg-setup-note">
+        <strong>Supabase URL:</strong> <span id="cfg-sb-status" style="color:var(--green)">Connected</span><br>
+        <span style="font-size:12px">To change, tap Exit and re-enter credentials.</span>
+      </div>
+      <div style="padding:14px 16px">
+        <button class="btn-save-cfg" style="width:100%;background:var(--bg);color:var(--ink);border:1.5px solid var(--border2)" onclick="syncNow()">↻ Force Sync Now</button>
+      </div>
+    </div>
+
+    <!-- Categories -->
+    <div class="sec-label">Expense Categories</div>
+    <div class="cfg-card">
+      <div class="cfg-head">Categories <span class="cfg-count" id="cat-count"></span></div>
+      <div id="cfg-cat-list"></div>
+      <div class="btn-add-row" onclick="toggleAddRow('cat')">
+        <div class="add-icon">+</div> Add Category
+      </div>
+      <div class="add-input-row" id="add-cat">
+        <input class="cfg-input" id="new-cat" placeholder="Category name…">
+        <button class="btn-save-cfg" onclick="addCfgItem('cat')">Add</button>
+      </div>
+    </div>
+
+    <!-- Types -->
+    <div class="sec-label">Expense Types</div>
+    <div class="cfg-card">
+      <div class="cfg-head">Types</div>
+      <div id="cfg-type-list"></div>
+      <div class="btn-add-row" onclick="toggleAddRow('type')">
+        <div class="add-icon">+</div> Add Type
+      </div>
+      <div class="add-input-row" id="add-type">
+        <input class="cfg-input" id="new-type" placeholder="Type name…">
+        <button class="btn-save-cfg" onclick="addCfgItem('type')">Add</button>
+      </div>
+    </div>
+
+    <!-- Frequencies -->
+    <div class="sec-label">Frequencies</div>
+    <div class="cfg-card">
+      <div class="cfg-head">Frequencies</div>
+      <div id="cfg-freq-list"></div>
+      <div class="btn-add-row" onclick="toggleAddRow('freq')">
+        <div class="add-icon">+</div> Add Frequency
+      </div>
+      <div class="add-input-row" id="add-freq">
+        <input class="cfg-input" id="new-freq" placeholder="Frequency name…">
+        <button class="btn-save-cfg" onclick="addCfgItem('freq')">Add</button>
+      </div>
+    </div>
+
+    <!-- Data -->
+    <div class="sec-label">Data</div>
+    <div class="cfg-card">
+      <div style="padding:16px;display:flex;flex-direction:column;gap:10px">
+        <button class="btn-save-cfg" style="width:100%;background:var(--bg);color:var(--ink);border:1.5px solid var(--border2)" onclick="exportJSON()">⬇ Export All Entries (JSON)</button>
+        <button class="btn-save-cfg" style="width:100%;background:var(--bg);color:var(--ink);border:1.5px solid var(--border2)" onclick="exportCSV()">⬇ Export as CSV</button>
+      </div>
+    </div>
+    <div style="height:20px"></div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav">
+    <div class="nav-item active" onclick="goPage('add',this)">
+      <div class="nav-active-bar"></div>
+      <div class="nav-icon">＋</div>
+      <div class="nav-label">ADD</div>
+    </div>
+    <div class="nav-item" onclick="goPage('log',this)">
+      <div class="nav-active-bar"></div>
+      <div class="nav-icon">📋</div>
+      <div class="nav-label">LOG</div>
+    </div>
+    <div class="nav-item" onclick="goPage('dash',this)">
+      <div class="nav-active-bar"></div>
+      <div class="nav-icon">📊</div>
+      <div class="nav-label">SUMMARY</div>
+    </div>
+    <div class="nav-item" onclick="goPage('cfg',this)">
+      <div class="nav-active-bar"></div>
+      <div class="nav-icon">⚙️</div>
+      <div class="nav-label">CONFIG</div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════
+//  DEFAULT CONFIG — Edit categories here anytime
+// ══════════════════════════════════════════════════
+const DEFAULTS = {
+  categories: ["Rent","Grocery","Zomato","Petrol","Home Maintenance","Healthcare",
+    "Salon","Mobile","Subscriptions","Car","Clothing & Accessories","Cosmetics",
+    "Fitness","Alcohol","Home Decor","Donations","Friends","Family","Gift",
+    "Vacation","Movie","Sundries","Insurance","ULIP","Tax","Others"],
+  types: ["Essentials","Non-Essentials","Fun"],
+  frequencies: ["Monthly","Weekly","Annual","One-time"]
+};
+
+const FAMILY_PIN = "1234"; // ← Change this to your preferred PIN
+const LS_KEY = 'de_finance_v2';
+
+// ══════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════
+let S = {
+  sbUrl: '', sbKey: '',
+  categories: [], types: [], frequencies: [],
+  entries: [],
+  dashPeriod: 'month',
+  logFilter: 'All'
+};
+let currentUser = '';
+let pinBuffer = '';
+let isSettingPin = false;
+let pendingPin = '';
+
+function loadLocal() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (raw) { const p = JSON.parse(raw); S = {...S, ...p}; }
+  } catch(e){}
+  if (!S.categories.length) S.categories = [...DEFAULTS.categories];
+  if (!S.types.length) S.types = [...DEFAULTS.types];
+  if (!S.frequencies.length) S.frequencies = [...DEFAULTS.frequencies];
+}
+
+function saveLocal() {
+  localStorage.setItem(LS_KEY, JSON.stringify(S));
+}
+
+// ══════════════════════════════════════════════════
+//  SUPABASE
+// ══════════════════════════════════════════════════
+async function sbFetch(path, opts={}) {
+  if (!S.sbUrl || !S.sbKey) return null;
+  try {
+    const res = await fetch(S.sbUrl + '/rest/v1/' + path, {
+      headers: {
+        'apikey': S.sbKey,
+        'Authorization': 'Bearer ' + S.sbKey,
+        'Content-Type': 'application/json',
+        'Prefer': opts.prefer || ''
+      },
+      ...opts
+    });
+    if (!res.ok) return null;
+    if (opts.method === 'POST') return true;
+    return await res.json();
+  } catch(e) { return null; }
+}
+
+async function syncNow() {
+  setSyncState('syncing');
+  const rows = await sbFetch('expenses?select=*&order=date.desc');
+  if (rows && Array.isArray(rows)) {
+    // Merge: remote is source of truth, merge with any local-only entries
+    const remoteIds = new Set(rows.map(r => r.id));
+    const localOnly = S.entries.filter(e => !remoteIds.has(e.id));
+    S.entries = [...rows.map(r => ({
+      id: r.id, date: r.date, amount: Number(r.amount),
+      category: r.category, type: r.type, freq: r.freq,
+      forWhom: r.for_whom, paidBy: r.paid_by,
+      saving: r.saving, desc: r.description, month: r.month,
+      addedBy: r.added_by
+    })), ...localOnly];
+    saveLocal();
+    setSyncState('online');
+    toast('✓ Synced — ' + S.entries.length + ' entries', 'ok');
+    if (document.getElementById('page-log').classList.contains('active')) renderLog();
+    if (document.getElementById('page-dash').classList.contains('active')) renderDash();
+  } else {
+    setSyncState('offline');
+    toast('Offline — showing local data', '');
+  }
+}
+
+function setSyncState(s) {
+  const dot = document.getElementById('sync-dot');
+  const lbl = document.getElementById('sync-label');
+  dot.className = 'sync-dot' + (s === 'offline' ? ' offline' : s === 'syncing' ? ' syncing' : '');
+  lbl.textContent = s === 'syncing' ? 'Syncing…' : s === 'offline' ? 'Offline' : 'Synced';
+}
+
+// ══════════════════════════════════════════════════
+//  SETUP / LOGIN FLOW
+// ══════════════════════════════════════════════════
+function initSetup() {
+  loadLocal();
+  if (!S.sbUrl || !S.sbKey) {
+    document.getElementById('setup-step-db').style.display = 'block';
+  } else {
+    showPinStep();
+  }
+}
+
+function saveSupabase() {
+  const url = document.getElementById('sb-url').value.trim().replace(/\/$/, '');
+  const key = document.getElementById('sb-key').value.trim();
+  if (!url || !key) return toast('Enter both URL and key', 'err');
+  S.sbUrl = url; S.sbKey = key;
+  saveLocal();
+  document.getElementById('setup-step-db').style.display = 'none';
+  showPinStep();
+}
+
+function showPinStep() {
+  document.getElementById('setup-step-pin').style.display = 'block';
+  // Check if PIN is already set
+  const storedPin = localStorage.getItem('de_pin');
+  if (!storedPin) {
+    document.getElementById('pin-step-label').textContent = 'Set your family PIN (4 digits)';
+    isSettingPin = true;
+  } else {
+    document.getElementById('pin-step-label').textContent = 'Who are you?';
+    isSettingPin = false;
+  }
+  renderPinDots();
+}
+
+function selectWho(btn) {
+  document.querySelectorAll('.who-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function getWho() {
+  return document.querySelector('.who-btn.active')?.dataset.who || 'Edwin';
+}
+
+function pinKey(d) {
+  if (!d) return;
+  if (pinBuffer.length >= 4) return;
+  pinBuffer += d;
+  renderPinDots();
+  if (pinBuffer.length === 4) setTimeout(checkPin, 150);
+}
+
+function pinDel() {
+  pinBuffer = pinBuffer.slice(0, -1);
+  renderPinDots();
+}
+
+function renderPinDots() {
+  const dots = document.querySelectorAll('.pin-dot');
+  dots.forEach((d, i) => d.classList.toggle('filled', i < pinBuffer.length));
+}
+
+function checkPin() {
+  const stored = localStorage.getItem('de_pin');
+  if (isSettingPin) {
+    if (!pendingPin) {
+      pendingPin = pinBuffer;
+      pinBuffer = '';
+      document.getElementById('pin-step-label').textContent = 'Confirm PIN';
+      document.getElementById('pin-hint').textContent = 'Enter again to confirm';
+      renderPinDots();
+      return;
+    } else {
+      if (pinBuffer === pendingPin) {
+        localStorage.setItem('de_pin', pinBuffer);
+        enterApp();
+      } else {
+        document.getElementById('pin-hint').textContent = "PINs don't match. Try again.";
+        pinBuffer = ''; pendingPin = '';
+        renderPinDots();
+      }
+    }
+  } else {
+    if (pinBuffer === stored) {
+      enterApp();
+    } else {
+      document.getElementById('pin-hint').textContent = 'Wrong PIN. Try again.';
+      pinBuffer = '';
+      renderPinDots();
+    }
+  }
+}
+
+function enterApp() {
+  currentUser = getWho();
+  document.getElementById('setup-screen').style.display = 'none';
+  document.getElementById('app').classList.add('visible');
+  document.getElementById('user-pill').textContent = currentUser;
+  buildSelects();
+  setDefaultDate();
+  syncNow();
+}
+
+function logout() {
+  currentUser = '';
+  pinBuffer = '';
+  pendingPin = '';
+  document.getElementById('setup-screen').style.display = 'flex';
+  document.getElementById('app').classList.remove('visible');
+  document.getElementById('setup-step-db').style.display = 'none';
+  document.getElementById('setup-step-pin').style.display = 'none';
+  showPinStep();
+}
+
+// ══════════════════════════════════════════════════
+//  NAVIGATION
+// ══════════════════════════════════════════════════
+function goPage(name, navEl) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  navEl.classList.add('active');
+  if (name === 'log') renderLog();
+  if (name === 'dash') renderDash();
+  if (name === 'cfg') renderCfg();
+}
+
+// ══════════════════════════════════════════════════
+//  FORM
+// ══════════════════════════════════════════════════
+function buildSelects() {
+  const cat = document.getElementById('f-cat');
+  cat.innerHTML = '<option value="">Select…</option>' + S.categories.map(c => `<option>${c}</option>`).join('');
+  const typ = document.getElementById('f-type');
+  typ.innerHTML = '<option value="">Select…</option>' + S.types.map(t => `<option>${t}</option>`).join('');
+  const frq = document.getElementById('f-freq');
+  frq.innerHTML = '<option value="">Select…</option>' + S.frequencies.map(f => `<option>${f}</option>`).join('');
+}
+
+function pickPill(el) {
+  const g = el.dataset.g;
+  document.querySelectorAll(`.pill[data-g="${g}"]`).forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function getPill(g) {
+  return document.querySelector(`.pill.active[data-g="${g}"]`)?.dataset.v || '';
+}
+
+function setDefaultDate() {
+  document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
+}
+
+async function submitExpense() {
+  const amount = parseFloat(document.getElementById('f-amount').value);
+  const category = document.getElementById('f-cat').value;
+  const type = document.getElementById('f-type').value;
+  const freq = document.getElementById('f-freq').value;
+  const date = document.getElementById('f-date').value;
+  const desc = document.getElementById('f-desc').value.trim();
+  const forWhom = getPill('for');
+  const paidBy = getPill('paid');
+  const saving = getPill('saving');
+
+  if (!amount || amount <= 0) return toast('Enter a valid amount', 'err');
+  if (!category) return toast('Select a category', 'err');
+  if (!type) return toast('Select expense type', 'err');
+  if (!freq) return toast('Select frequency', 'err');
+  if (!date) return toast('Select a date', 'err');
+
+  const entry = {
+    id: Date.now(),
+    date, amount, category, type, freq,
+    forWhom, paidBy, saving, desc,
+    month: date.slice(0,7),
+    addedBy: currentUser
+  };
+
+  // Save locally first
+  S.entries.unshift(entry);
+  saveLocal();
+
+  // Push to Supabase
+  setSyncState('syncing');
+  const ok = await sbFetch('expenses', {
+    method: 'POST',
+    prefer: 'return=minimal',
+    body: JSON.stringify({
+      id: entry.id, date: entry.date, amount: entry.amount,
+      category: entry.category, type: entry.type, freq: entry.freq,
+      for_whom: entry.forWhom, paid_by: entry.paidBy,
+      saving: entry.saving, description: entry.desc,
+      month: entry.month, added_by: entry.addedBy
+    })
+  });
+
+  if (ok) {
+    setSyncState('online');
+    toast('✓ Saved & synced', 'ok');
+  } else {
+    setSyncState('offline');
+    toast('Saved locally (offline)', '');
+  }
+
+  resetForm();
+}
+
+function resetForm() {
+  document.getElementById('f-amount').value = '';
+  document.getElementById('f-cat').value = '';
+  document.getElementById('f-type').value = '';
+  document.getElementById('f-freq').value = '';
+  document.getElementById('f-desc').value = '';
+  setDefaultDate();
+  document.querySelectorAll('.pill[data-g="for"]').forEach(p => p.classList.toggle('active', p.dataset.v === 'Both'));
+  document.querySelectorAll('.pill[data-g="paid"]').forEach(p => p.classList.toggle('active', p.dataset.v === 'Edwin'));
+  document.querySelectorAll('.pill[data-g="saving"]').forEach(p => p.classList.toggle('active', p.dataset.v === 'No'));
+}
+
+// ══════════════════════════════════════════════════
+//  LOG
+// ══════════════════════════════════════════════════
+function setLogFilter(el) {
+  document.querySelectorAll('.log-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  S.logFilter = el.dataset.f;
+  renderLog();
+}
+
+function renderLog() {
+  const list = document.getElementById('log-list');
+  let entries = S.entries;
+  if (S.logFilter !== 'All') entries = entries.filter(e => e.forWhom === S.logFilter);
+  if (!entries.length) {
+    list.innerHTML = `<div class="no-data">No entries yet.<br>Tap + to add your first expense.</div>`;
+    return;
+  }
+  list.innerHTML = entries.map(e => {
+    const fc = 'for-' + (e.forWhom || 'both').toLowerCase();
+    return `
+    <div class="entry-card">
+      <div class="entry-left">
+        <div class="entry-cat">${e.category}</div>
+        ${e.desc ? `<div class="entry-desc">${e.desc}</div>` : ''}
+        <div class="entry-chips">
+          <div class="echip ${fc}">For: ${e.forWhom}</div>
+          <div class="echip paid">Paid: ${e.paidBy}</div>
+          <div class="echip">${e.type}</div>
+          <div class="echip">${e.freq}</div>
+          ${e.saving === 'Yes' ? '<div class="echip saveable">💡 Saveable</div>' : ''}
+        </div>
+        ${e.addedBy ? `<div class="entry-by" style="margin-top:6px;font-size:11px;color:var(--ink3)">Added by ${e.addedBy}</div>` : ''}
+      </div>
+      <div class="entry-right">
+        <div class="entry-amount">₹${Number(e.amount).toLocaleString('en-IN')}</div>
+        <div class="entry-date">${fmtDate(e.date)}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════
+//  DASHBOARD
+// ══════════════════════════════════════════════════
+function setPeriod(p, el) {
+  S.dashPeriod = p;
+  document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  renderDash();
+}
+
+function filteredEntries() {
+  const now = new Date();
+  return S.entries.filter(e => {
+    const d = new Date(e.date + 'T00:00:00');
+    if (S.dashPeriod === 'month') return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    if (S.dashPeriod === 'quarter') {
+      const q = Math.floor(now.getMonth() / 3);
+      return Math.floor(d.getMonth() / 3) === q && d.getFullYear() === now.getFullYear();
+    }
+    return true;
+  });
+}
+
+function renderDash() {
+  const es = filteredEntries();
+  const total = es.reduce((s,e) => s + Number(e.amount), 0);
+  const avg = es.length ? total / es.length : 0;
+  const saveable = es.filter(e => e.saving === 'Yes').reduce((s,e) => s+Number(e.amount),0);
+  const ess = es.filter(e => e.type === 'Essentials').reduce((s,e) => s+Number(e.amount),0);
+  const fun = total - ess;
+
+  document.getElementById('d-total').textContent = '₹' + fmt(total);
+  document.getElementById('d-entries-sub').textContent = es.length + ' entries';
+  document.getElementById('d-avg').textContent = '₹' + fmt(Math.round(avg));
+  document.getElementById('d-save').textContent = '₹' + fmt(saveable);
+  document.getElementById('d-ess').textContent = '₹' + fmt(ess);
+  document.getElementById('d-ess-pct').textContent = total ? Math.round(ess/total*100) + '% of total' : '0%';
+  document.getElementById('d-fun').textContent = '₹' + fmt(fun);
+  document.getElementById('d-fun-pct').textContent = total ? Math.round(fun/total*100) + '% of total' : '0%';
+
+  // Bars
+  const catTot = {};
+  es.forEach(e => catTot[e.category] = (catTot[e.category]||0) + Number(e.amount));
+  const sorted = Object.entries(catTot).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const mx = sorted[0]?.[1] || 1;
+  document.getElementById('d-bars').innerHTML = sorted.length
+    ? sorted.map(([c,v]) => `
+        <div class="bar-item">
+          <div class="bar-name">${c}</div>
+          <div class="bar-track"><div class="bar-fill" style="width:${v/mx*100}%"></div></div>
+          <div class="bar-val">₹${Math.round(v/1000)}k</div>
+        </div>`).join('')
+    : '<div style="color:var(--ink3);text-align:center;padding:20px 0;font-size:13px">No data for this period</div>';
+
+  // Paid by
+  const ep = es.filter(e => e.paidBy === 'Edwin').reduce((s,e)=>s+Number(e.amount),0);
+  const dp = es.filter(e => e.paidBy === 'Divya').reduce((s,e)=>s+Number(e.amount),0);
+  document.getElementById('d-ea').textContent = '₹' + fmt(ep);
+  document.getElementById('d-da').textContent = '₹' + fmt(dp);
+  document.getElementById('d-ep').textContent = total ? Math.round(ep/total*100) + '%' : '0%';
+  document.getElementById('d-dp').textContent = total ? Math.round(dp/total*100) + '%' : '0%';
+
+  // For whom
+  ['Both','Edwin','Divya','AJ'].forEach(w => {
+    const id = w === 'AJ' ? 'd-fa' : w === 'Both' ? 'd-fb' : w === 'Edwin' ? 'd-fe' : 'd-fd';
+    const v = es.filter(e => e.forWhom === w).reduce((s,e)=>s+Number(e.amount),0);
+    document.getElementById(id).textContent = '₹' + fmt(v);
+  });
+}
+
+// ══════════════════════════════════════════════════
+//  CONFIG
+// ══════════════════════════════════════════════════
+function renderCfg() {
+  renderCfgList('cat', S.categories);
+  renderCfgList('type', S.types);
+  renderCfgList('freq', S.frequencies);
+  document.getElementById('cat-count').textContent = S.categories.length + ' items';
+  const hasSb = !!(S.sbUrl && S.sbKey);
+  document.getElementById('cfg-sb-status').textContent = hasSb ? 'Connected ✓' : 'Not connected';
+  document.getElementById('cfg-sb-status').style.color = hasSb ? 'var(--green)' : 'var(--red)';
+}
+
+function renderCfgList(key, items) {
+  document.getElementById('cfg-'+key+'-list').innerHTML = items.map((item,i) => `
+    <div class="cfg-item">
+      <div class="cfg-item-name">${item}</div>
+      <button class="btn-del" onclick="delCfgItem('${key}',${i})">Remove</button>
+    </div>`).join('');
+}
+
+function delCfgItem(key, i) {
+  const map = {cat:'categories',type:'types',freq:'frequencies'};
+  const arr = S[map[key]];
+  if (arr.length <= 1) return toast('Keep at least one item','err');
+  if (!confirm(`Remove "${arr[i]}"?`)) return;
+  arr.splice(i, 1);
+  saveLocal();
+  buildSelects();
+  renderCfg();
+}
+
+function toggleAddRow(key) {
+  const el = document.getElementById('add-'+key);
+  el.classList.toggle('show');
+  if (el.classList.contains('show')) document.getElementById('new-'+key).focus();
+}
+
+function addCfgItem(key) {
+  const map = {cat:'categories',type:'types',freq:'frequencies'};
+  const inp = document.getElementById('new-'+key);
+  const val = inp.value.trim();
+  if (!val) return toast('Enter a name','err');
+  if (S[map[key]].includes(val)) return toast('Already exists','err');
+  S[map[key]].push(val);
+  saveLocal();
+  buildSelects();
+  inp.value = '';
+  document.getElementById('add-'+key).classList.remove('show');
+  renderCfg();
+  toast('✓ Added: ' + val, 'ok');
+}
+
+// ══════════════════════════════════════════════════
+//  EXPORT
+// ══════════════════════════════════════════════════
+function exportJSON() {
+  const blob = new Blob([JSON.stringify(S.entries, null, 2)], {type:'application/json'});
+  dl(blob, 'DE_Finance_FY27.json');
+}
+
+function exportCSV() {
+  const headers = ['Date','Amount','Category','Type','Frequency','For Whom','Paid By','Saving','Description','Added By'];
+  const rows = S.entries.map(e => [
+    e.date, e.amount, e.category, e.type, e.freq,
+    e.forWhom, e.paidBy, e.saving,
+    '"' + (e.desc||'').replace(/"/g,'""') + '"',
+    e.addedBy
+  ].join(','));
+  const csv = [headers.join(','), ...rows].join('\n');
+  dl(new Blob([csv], {type:'text/csv'}), 'DE_Finance_FY27.csv');
+}
+
+function dl(blob, name) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.click();
+}
+
+// ══════════════════════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════════════════════
+function fmt(n) { return Number(n).toLocaleString('en-IN'); }
+
+function fmtDate(s) {
+  if (!s) return '';
+  return new Date(s + 'T00:00:00').toLocaleDateString('en-IN', {day:'numeric',month:'short',year:'numeric'});
+}
+
+function toast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (type ? ' '+type : '');
+  setTimeout(() => t.className = 'toast', 3000);
+}
+
+// ══════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════
+initSetup();
+</script>
+</body>
+</html>
