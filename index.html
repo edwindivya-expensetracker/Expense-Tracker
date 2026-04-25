@@ -459,6 +459,18 @@ select.finput option { background: white; color: var(--ink); }
 .echip.for-both { background: var(--amber-bg); border-color: var(--amber-border); color: var(--amber); }
 .echip.paid { font-weight: 600; }
 .echip.saveable { background: var(--green-bg); border-color: #a0d4b8; color: var(--green); }
+.btn-del-entry {
+  margin-top: 10px;
+  background: none;
+  border: 1px solid #f0c0bb;
+  color: var(--red);
+  padding: 5px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-family: 'Outfit', sans-serif;
+  cursor: pointer;
+  display: inline-block;
+}
 .entry-right { text-align: right; flex-shrink: 0; }
 .entry-amount {
   font-family: 'Playfair Display', serif;
@@ -1343,6 +1355,31 @@ function setLogFilter(el) {
   renderLog();
 }
 
+async function deleteEntry(id) {
+  if (!confirm('Delete this entry?')) return;
+  // Remove locally
+  S.entries = S.entries.filter(e => e.id !== id);
+  saveLocal();
+  // Remove from card immediately
+  const card = document.getElementById('entry-' + id);
+  if (card) card.remove();
+  // Delete from Supabase
+  if (S.sbUrl && S.sbKey) {
+    try {
+      await fetch(S.sbUrl + '/rest/v1/expenses?id=eq.' + id, {
+        method: 'DELETE',
+        headers: {
+          'apikey': S.sbKey,
+          'Authorization': 'Bearer ' + S.sbKey,
+          'Content-Type': 'application/json'
+        }
+      });
+    } catch(e) {}
+  }
+  toast('Entry deleted', 'ok');
+  renderLog();
+}
+
 function renderLog() {
   const list = document.getElementById('log-list');
   let entries = S.entries;
@@ -1354,7 +1391,7 @@ function renderLog() {
   list.innerHTML = entries.map(e => {
     const fc = 'for-' + (e.forWhom || 'both').toLowerCase();
     return `
-    <div class="entry-card">
+    <div class="entry-card" id="entry-${e.id}">
       <div class="entry-left">
         <div class="entry-cat">${e.category}</div>
         ${e.desc ? `<div class="entry-desc">${e.desc}</div>` : ''}
@@ -1366,6 +1403,7 @@ function renderLog() {
           ${e.saving === 'Yes' ? '<div class="echip saveable">💡 Saveable</div>' : ''}
         </div>
         ${e.addedBy ? `<div class="entry-by" style="margin-top:6px;font-size:11px;color:var(--ink3)">Added by ${e.addedBy}</div>` : ''}
+        <button class="btn-del-entry" onclick="deleteEntry(${e.id})">🗑 Delete</button>
       </div>
       <div class="entry-right">
         <div class="entry-amount">₹${Number(e.amount).toLocaleString('en-IN')}</div>
@@ -1501,21 +1539,48 @@ function addCfgItem(key) {
 // ══════════════════════════════════════════════════
 //  EXPORT
 // ══════════════════════════════════════════════════
-function exportJSON() {
-  const blob = new Blob([JSON.stringify(S.entries, null, 2)], {type:'application/json'});
-  dl(blob, 'DE_Finance_FY27.json');
+function exportXLSX() {
+  // Build CSV with BOM for Excel UTF-8 compatibility
+  const headers = ['Date','Amount (INR)','Category','Type','Frequency','For Whom','Paid By','Possible Saving','Description','Added By','Month'];
+  const rows = S.entries.map(e => [
+    e.date,
+    e.amount,
+    e.category,
+    e.type,
+    e.freq,
+    e.forWhom,
+    e.paidBy,
+    e.saving,
+    '"' + (e.desc||'').replace(/"/g,'""') + '"',
+    e.addedBy,
+    e.month
+  ].join(','));
+  const csv = '\uFEFF' + [headers.join(','), ...rows].join('\n');
+  // .xlsx open-in-excel trick: use CSV with Excel MIME type
+  dl(new Blob([csv], {type:'application/vnd.ms-excel;charset=utf-8'}), 'DE_Finance_FY27.xlsx');
 }
 
-function exportCSV() {
-  const headers = ['Date','Amount','Category','Type','Frequency','For Whom','Paid By','Saving','Description','Added By'];
+function exportGSheet() {
+  // Export as CSV then guide user to import into Google Sheets
+  const headers = ['Date','Amount (INR)','Category','Type','Frequency','For Whom','Paid By','Possible Saving','Description','Added By','Month'];
   const rows = S.entries.map(e => [
-    e.date, e.amount, e.category, e.type, e.freq,
-    e.forWhom, e.paidBy, e.saving,
+    e.date,
+    e.amount,
+    e.category,
+    e.type,
+    e.freq,
+    e.forWhom,
+    e.paidBy,
+    e.saving,
     '"' + (e.desc||'').replace(/"/g,'""') + '"',
-    e.addedBy
+    e.addedBy,
+    e.month
   ].join(','));
-  const csv = [headers.join(','), ...rows].join('\n');
+  const csv = '\uFEFF' + [headers.join(','), ...rows].join('\n');
   dl(new Blob([csv], {type:'text/csv'}), 'DE_Finance_FY27.csv');
+  setTimeout(() => {
+    alert('CSV downloaded!\n\nTo open in Google Sheets:\n1. Go to sheets.new\n2. File → Import\n3. Upload the downloaded CSV\n4. Done!');
+  }, 500);
 }
 
 function dl(blob, name) {
