@@ -861,25 +861,27 @@ select.finput option { background: white; color: var(--ink); }
       </div>
     </div>
     <div class="stat-grid">
-      <div class="stat-card">
-        <div class="stat-lbl">Avg / Entry</div>
-        <div class="stat-val" id="d-avg">₹0</div>
-      </div>
       <div class="stat-card green">
         <div class="stat-lbl">Saveable</div>
         <div class="stat-val" id="d-save">₹0</div>
+        <div class="stat-sub" id="d-save-pct">0% of total</div>
+      </div>
+      <div class="stat-card" style="background:#fffbe6;border-color:#ffe58f">
+        <div class="stat-lbl" style="color:#8a6d00">Non-Essentials</div>
+        <div class="stat-val" id="d-noness" style="color:#8a6d00">₹0</div>
+        <div class="stat-sub" id="d-noness-pct" style="color:#b8960a">0% of total</div>
       </div>
     </div>
     <div class="stat-grid">
-      <div class="stat-card">
-        <div class="stat-lbl">Essentials</div>
-        <div class="stat-val" id="d-ess">₹0</div>
-        <div class="stat-sub" id="d-ess-pct">0%</div>
+      <div class="stat-card" style="background:#e8f5ee;border-color:#a0d4b8">
+        <div class="stat-lbl" style="color:#1a5c35">Essentials</div>
+        <div class="stat-val" id="d-ess" style="color:#1a5c35">₹0</div>
+        <div class="stat-sub" id="d-ess-pct" style="color:#2e7d52">0% of total</div>
       </div>
-      <div class="stat-card">
-        <div class="stat-lbl">Fun & Others</div>
-        <div class="stat-val" id="d-fun">₹0</div>
-        <div class="stat-sub" id="d-fun-pct">0%</div>
+      <div class="stat-card" style="background:#fff0f0;border-color:#ffb3b3">
+        <div class="stat-lbl" style="color:#8b0000">Fun</div>
+        <div class="stat-val" id="d-fun" style="color:#c0392b">₹0</div>
+        <div class="stat-sub" id="d-fun-pct" style="color:#c0392b">0% of total</div>
       </div>
     </div>
 
@@ -903,19 +905,19 @@ select.finput option { background: white; color: var(--ink); }
     <div class="sec-label">Expense For</div>
     <div class="fcard" style="padding:4px 16px">
       <div class="split-item">
-        <div class="split-name">Both</div>
+        <div><div class="split-name">Both</div><div class="split-pct" id="d-fb-pct">0%</div></div>
         <div class="split-amt" id="d-fb">₹0</div>
       </div>
       <div class="split-item">
-        <div class="split-name">Edwin</div>
+        <div><div class="split-name">Edwin</div><div class="split-pct" id="d-fe-pct">0%</div></div>
         <div class="split-amt" id="d-fe">₹0</div>
       </div>
       <div class="split-item">
-        <div class="split-name">Divya</div>
+        <div><div class="split-name">Divya</div><div class="split-pct" id="d-fd-pct">0%</div></div>
         <div class="split-amt" id="d-fd">₹0</div>
       </div>
       <div class="split-item">
-        <div class="split-name">AJ</div>
+        <div><div class="split-name">AJ</div><div class="split-pct" id="d-fa-pct">0%</div></div>
         <div class="split-amt" id="d-fa">₹0</div>
       </div>
     </div>
@@ -1439,19 +1441,22 @@ function filteredEntries() {
 function renderDash() {
   const es = filteredEntries();
   const total = es.reduce((s,e) => s + Number(e.amount), 0);
-  const avg = es.length ? total / es.length : 0;
   const saveable = es.filter(e => e.saving === 'Yes').reduce((s,e) => s+Number(e.amount),0);
   const ess = es.filter(e => e.type === 'Essentials').reduce((s,e) => s+Number(e.amount),0);
-  const fun = total - ess;
+  const noness = es.filter(e => e.type === 'Non-Essentials').reduce((s,e) => s+Number(e.amount),0);
+  const fun = es.filter(e => e.type === 'Fun').reduce((s,e) => s+Number(e.amount),0);
+  const pct = v => total ? Math.round(v/total*100) + '% of total' : '0% of total';
 
   document.getElementById('d-total').textContent = '₹' + fmt(total);
   document.getElementById('d-entries-sub').textContent = es.length + ' entries';
-  document.getElementById('d-avg').textContent = '₹' + fmt(Math.round(avg));
   document.getElementById('d-save').textContent = '₹' + fmt(saveable);
+  document.getElementById('d-save-pct').textContent = pct(saveable);
   document.getElementById('d-ess').textContent = '₹' + fmt(ess);
-  document.getElementById('d-ess-pct').textContent = total ? Math.round(ess/total*100) + '% of total' : '0%';
+  document.getElementById('d-ess-pct').textContent = pct(ess);
+  document.getElementById('d-noness').textContent = '₹' + fmt(noness);
+  document.getElementById('d-noness-pct').textContent = pct(noness);
   document.getElementById('d-fun').textContent = '₹' + fmt(fun);
-  document.getElementById('d-fun-pct').textContent = total ? Math.round(fun/total*100) + '% of total' : '0%';
+  document.getElementById('d-fun-pct').textContent = pct(fun);
 
   // Bars
   const catTot = {};
@@ -1478,8 +1483,10 @@ function renderDash() {
   // For whom
   ['Both','Edwin','Divya','AJ'].forEach(w => {
     const id = w === 'AJ' ? 'd-fa' : w === 'Both' ? 'd-fb' : w === 'Edwin' ? 'd-fe' : 'd-fd';
+    const pid = id + '-pct';
     const v = es.filter(e => e.forWhom === w).reduce((s,e)=>s+Number(e.amount),0);
     document.getElementById(id).textContent = '₹' + fmt(v);
+    document.getElementById(pid).textContent = total ? Math.round(v/total*100) + '%' : '0%';
   });
 }
 
