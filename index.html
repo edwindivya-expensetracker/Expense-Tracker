@@ -984,8 +984,8 @@ select.finput option { background: white; color: var(--ink); }
     <div class="sec-label">Data</div>
     <div class="cfg-card">
       <div style="padding:16px;display:flex;flex-direction:column;gap:10px">
-        <button class="btn-save-cfg" style="width:100%;background:var(--bg);color:var(--ink);border:1.5px solid var(--border2)" onclick="exportJSON()">⬇ Export All Entries (JSON)</button>
-        <button class="btn-save-cfg" style="width:100%;background:var(--bg);color:var(--ink);border:1.5px solid var(--border2)" onclick="exportCSV()">⬇ Export as CSV</button>
+        <button class="btn-save-cfg" style="width:100%;background:var(--ink);color:white;border:none" onclick="exportXLSX()">⬇ Export as Excel (.xlsx)</button>
+        <button class="btn-save-cfg" style="width:100%;background:var(--bg);color:var(--ink);border:1.5px solid var(--border2);margin-top:0" onclick="exportGSheet()">↗ Export for Google Sheets</button>
       </div>
     </div>
     <div style="height:20px"></div>
@@ -1463,7 +1463,7 @@ function renderDash() {
         <div class="bar-item">
           <div class="bar-name">${c}</div>
           <div class="bar-track"><div class="bar-fill" style="width:${v/mx*100}%"></div></div>
-          <div class="bar-val">₹${Math.round(v/1000)}k</div>
+          <div class="bar-val" style="width:90px;text-align:right">₹${Math.round(v/1000)}k <span style="color:var(--ink3);font-size:11px">(${total ? Math.round(v/total*100) : 0}%)</span></div>
         </div>`).join('')
     : '<div style="color:var(--ink3);text-align:center;padding:20px 0;font-size:13px">No data for this period</div>';
 
@@ -1540,47 +1540,29 @@ function addCfgItem(key) {
 //  EXPORT
 // ══════════════════════════════════════════════════
 function exportXLSX() {
-  // Build CSV with BOM for Excel UTF-8 compatibility
   const headers = ['Date','Amount (INR)','Category','Type','Frequency','For Whom','Paid By','Possible Saving','Description','Added By','Month'];
   const rows = S.entries.map(e => [
-    e.date,
-    e.amount,
-    e.category,
-    e.type,
-    e.freq,
-    e.forWhom,
-    e.paidBy,
-    e.saving,
+    e.date, e.amount, e.category, e.type, e.freq,
+    e.forWhom, e.paidBy, e.saving,
     '"' + (e.desc||'').replace(/"/g,'""') + '"',
-    e.addedBy,
-    e.month
+    e.addedBy, e.month
   ].join(','));
   const csv = '\uFEFF' + [headers.join(','), ...rows].join('\n');
-  // .xlsx open-in-excel trick: use CSV with Excel MIME type
   dl(new Blob([csv], {type:'application/vnd.ms-excel;charset=utf-8'}), 'DE_Finance_FY27.xlsx');
+  toast('Excel file downloading…', 'ok');
 }
 
 function exportGSheet() {
-  // Export as CSV then guide user to import into Google Sheets
   const headers = ['Date','Amount (INR)','Category','Type','Frequency','For Whom','Paid By','Possible Saving','Description','Added By','Month'];
   const rows = S.entries.map(e => [
-    e.date,
-    e.amount,
-    e.category,
-    e.type,
-    e.freq,
-    e.forWhom,
-    e.paidBy,
-    e.saving,
+    e.date, e.amount, e.category, e.type, e.freq,
+    e.forWhom, e.paidBy, e.saving,
     '"' + (e.desc||'').replace(/"/g,'""') + '"',
-    e.addedBy,
-    e.month
+    e.addedBy, e.month
   ].join(','));
   const csv = '\uFEFF' + [headers.join(','), ...rows].join('\n');
-  dl(new Blob([csv], {type:'text/csv'}), 'DE_Finance_FY27.csv');
-  setTimeout(() => {
-    alert('CSV downloaded!\n\nTo open in Google Sheets:\n1. Go to sheets.new\n2. File → Import\n3. Upload the downloaded CSV\n4. Done!');
-  }, 500);
+  dl(new Blob([csv], {type:'text/csv'}), 'DE_Finance_FY27_GSheet.csv');
+  toast('CSV downloaded — import into Google Sheets via File → Import', 'ok');
 }
 
 function dl(blob, name) {
