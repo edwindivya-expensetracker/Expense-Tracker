@@ -429,6 +429,22 @@ select.finput option { background: white; color: var(--ink); }
 }
 .log-chip.active { background: var(--ink); border-color: var(--ink); color: white; }
 
+.cat-bar { margin-top: 0; }
+.cat-chip {
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: 1.5px solid var(--border2);
+  background: var(--surface);
+  color: var(--ink2);
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+.cat-chip.active { background: var(--blue); border-color: var(--blue); color: white; }
+
 .entry-card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -931,6 +947,7 @@ select.modal-input option { background: white; }
       <div class="log-chip" data-f="AJ" onclick="setLogFilter(this)">AJ</div>
       <div class="log-chip" data-f="Both" onclick="setLogFilter(this)">Both</div>
     </div>
+    <div class="log-bar cat-bar" id="cat-filter-bar"></div>
     <div id="log-list"></div>
   </div>
 
@@ -1167,7 +1184,8 @@ let S = {
   categories: [], types: [], frequencies: [],
   entries: [],
   dashPeriod: 'month',
-  logFilter: 'All'
+  logFilter: 'All',
+  logCategoryFilter: 'All'
 };
 let currentUser = '';
 let pinBuffer = '';
@@ -1480,6 +1498,24 @@ function setLogFilter(el) {
   renderLog();
 }
 
+function setCategoryFilter(el) {
+  document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  S.logCategoryFilter = el.dataset.cat;
+  renderLog();
+}
+
+function renderCategoryBar() {
+  const bar = document.getElementById('cat-filter-bar');
+  const usedCats = [...new Set(S.entries.map(e => e.category))].sort();
+  if (S.logCategoryFilter !== 'All' && !usedCats.includes(S.logCategoryFilter)) {
+    S.logCategoryFilter = 'All';
+  }
+  bar.innerHTML =
+    `<div class="cat-chip${S.logCategoryFilter === 'All' ? ' active' : ''}" data-cat="All" onclick="setCategoryFilter(this)">All</div>` +
+    usedCats.map(c => `<div class="cat-chip${S.logCategoryFilter === c ? ' active' : ''}" data-cat="${c}" onclick="setCategoryFilter(this)">${c}</div>`).join('');
+}
+
 function openEditModal(id) {
   const e = S.entries.find(x => x.id === id);
   if (!e) return;
@@ -1598,9 +1634,11 @@ async function deleteEntry(id) {
 }
 
 function renderLog() {
+  renderCategoryBar();
   const list = document.getElementById('log-list');
   let entries = S.entries;
   if (S.logFilter !== 'All') entries = entries.filter(e => e.forWhom === S.logFilter);
+  if (S.logCategoryFilter !== 'All') entries = entries.filter(e => e.category === S.logCategoryFilter);
   if (!entries.length) {
     list.innerHTML = `<div class="no-data">No entries yet.<br>Tap + to add your first expense.</div>`;
     return;
