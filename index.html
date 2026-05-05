@@ -443,6 +443,41 @@ select.finput option { background: white; color: var(--ink); }
 }
 #log-total-bar .ltb-label { color: var(--ink2); font-weight: 500; }
 #log-total-bar .ltb-amt { color: var(--amber); font-weight: 700; font-size: 15px; }
+
+.log-search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: var(--surface);
+  border: 1.5px solid var(--border2);
+  border-radius: 12px;
+  margin: 6px 0 10px;
+  padding: 0 10px;
+  transition: border-color 0.15s;
+}
+.log-search-wrap:focus-within { border-color: var(--blue); }
+.log-search-icon { font-size: 17px; color: var(--ink2); margin-right: 6px; user-select: none; }
+.log-search-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 10px 0;
+  font-size: 14px;
+  font-family: 'Outfit', sans-serif;
+  color: var(--ink);
+}
+.log-search-input::placeholder { color: var(--ink2); }
+.log-search-clear {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--ink2);
+  padding: 4px;
+  border-radius: 50%;
+  line-height: 1;
+}
 .cat-chip {
   padding: 5px 12px;
   border-radius: 20px;
@@ -961,6 +996,11 @@ select.modal-input option { background: white; }
       <div class="log-chip" data-f="Both" onclick="setLogFilter(this)">Both</div>
     </div>
     <div class="log-bar cat-bar" id="cat-filter-bar"></div>
+    <div class="log-search-wrap">
+      <span class="log-search-icon">⌕</span>
+      <input id="log-search-input" class="log-search-input" type="search" placeholder="Search expenses…" oninput="setLogSearch(this.value)">
+      <button class="log-search-clear" id="log-search-clear" onclick="clearLogSearch()" style="display:none">✕</button>
+    </div>
     <div id="log-total-bar" style="display:none"></div>
     <div id="log-list"></div>
   </div>
@@ -1199,7 +1239,8 @@ let S = {
   entries: [],
   dashPeriod: 'month',
   logFilter: 'All',
-  logCategoryFilter: 'All'
+  logCategoryFilter: 'All',
+  logSearch: ''
 };
 let currentUser = '';
 let pinBuffer = '';
@@ -1647,6 +1688,19 @@ async function deleteEntry(id) {
   renderLog();
 }
 
+function setLogSearch(val) {
+  S.logSearch = val.trim();
+  document.getElementById('log-search-clear').style.display = val ? 'block' : 'none';
+  renderLog();
+}
+
+function clearLogSearch() {
+  S.logSearch = '';
+  document.getElementById('log-search-input').value = '';
+  document.getElementById('log-search-clear').style.display = 'none';
+  renderLog();
+}
+
 function renderLog() {
   renderCategoryBar();
   const list = document.getElementById('log-list');
@@ -1654,8 +1708,14 @@ function renderLog() {
   let entries = S.entries;
   if (S.logFilter !== 'All') entries = entries.filter(e => e.forWhom === S.logFilter);
   if (S.logCategoryFilter !== 'All') entries = entries.filter(e => e.category === S.logCategoryFilter);
-  const isFiltered = S.logFilter !== 'All' || S.logCategoryFilter !== 'All';
-  if (isFiltered && entries.length) {
+  if (S.logSearch) {
+    const q = S.logSearch.toLowerCase();
+    entries = entries.filter(e =>
+      [e.category, e.desc, e.forWhom, e.paidBy, e.type, e.freq, e.addedBy, String(e.amount), e.date]
+        .some(v => v && String(v).toLowerCase().includes(q))
+    );
+  }
+  if (entries.length) {
     const total = entries.reduce((sum, e) => sum + Number(e.amount), 0);
     totalBar.innerHTML = `<span class="ltb-label">${entries.length} expense${entries.length !== 1 ? 's' : ''}</span><span class="ltb-amt">₹${total.toLocaleString('en-IN')}</span>`;
     totalBar.style.display = 'flex';
