@@ -430,6 +430,19 @@ select.finput option { background: white; color: var(--ink); }
 .log-chip.active { background: var(--ink); border-color: var(--ink); color: white; }
 
 .cat-bar { margin-top: 0; }
+#log-total-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--amber-bg);
+  border: 1px solid var(--amber-border);
+  border-radius: 10px;
+  padding: 8px 14px;
+  margin-bottom: 10px;
+  font-size: 13px;
+}
+#log-total-bar .ltb-label { color: var(--ink2); font-weight: 500; }
+#log-total-bar .ltb-amt { color: var(--amber); font-weight: 700; font-size: 15px; }
 .cat-chip {
   padding: 5px 12px;
   border-radius: 20px;
@@ -948,6 +961,7 @@ select.modal-input option { background: white; }
       <div class="log-chip" data-f="Both" onclick="setLogFilter(this)">Both</div>
     </div>
     <div class="log-bar cat-bar" id="cat-filter-bar"></div>
+    <div id="log-total-bar" style="display:none"></div>
     <div id="log-list"></div>
   </div>
 
@@ -1636,9 +1650,18 @@ async function deleteEntry(id) {
 function renderLog() {
   renderCategoryBar();
   const list = document.getElementById('log-list');
+  const totalBar = document.getElementById('log-total-bar');
   let entries = S.entries;
   if (S.logFilter !== 'All') entries = entries.filter(e => e.forWhom === S.logFilter);
   if (S.logCategoryFilter !== 'All') entries = entries.filter(e => e.category === S.logCategoryFilter);
+  const isFiltered = S.logFilter !== 'All' || S.logCategoryFilter !== 'All';
+  if (isFiltered && entries.length) {
+    const total = entries.reduce((sum, e) => sum + Number(e.amount), 0);
+    totalBar.innerHTML = `<span class="ltb-label">${entries.length} expense${entries.length !== 1 ? 's' : ''}</span><span class="ltb-amt">₹${total.toLocaleString('en-IN')}</span>`;
+    totalBar.style.display = 'flex';
+  } else {
+    totalBar.style.display = 'none';
+  }
   if (!entries.length) {
     list.innerHTML = `<div class="no-data">No entries yet.<br>Tap + to add your first expense.</div>`;
     return;
