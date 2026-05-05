@@ -1142,6 +1142,12 @@ select.modal-input option { background: white; }
       <div style="padding:16px;display:flex;flex-direction:column;gap:10px">
         <button class="btn-save-cfg" style="width:100%;background:var(--ink);color:white;border:none" onclick="exportXLSX()">⬇ Export as Excel (.xlsx)</button>
         <button class="btn-save-cfg" style="width:100%;background:var(--bg);color:var(--ink);border:1.5px solid var(--border2);margin-top:0" onclick="exportGSheet()">↗ Export for Google Sheets</button>
+        <hr style="border:none;border-top:1px solid var(--border);margin:2px 0">
+        <button class="btn-save-cfg" style="width:100%;background:var(--green);color:white;border:none" onclick="exportBackup()">⬇ Download Backup (.json)</button>
+        <label style="width:100%;margin:0">
+          <input type="file" id="backup-file-input" accept=".json" style="display:none" onchange="importBackup(this)">
+          <span class="btn-save-cfg" style="display:block;width:100%;box-sizing:border-box;text-align:center;background:var(--bg);color:var(--green);border:1.5px solid var(--green);cursor:pointer">⬆ Import Backup (.json)</span>
+        </label>
       </div>
     </div>
     <div style="height:20px"></div>
@@ -1946,6 +1952,89 @@ function exportGSheet() {
   const csv = '\uFEFF' + [headers.join(','), ...rows].join('\n');
   dl(new Blob([csv], {type:'text/csv'}), 'DE_Finance_FY27_GSheet.csv');
   toast('CSV downloaded — import into Google Sheets via File → Import', 'ok');
+}
+
+function exportBackup() {
+  const today = new Date().toISOString().slice(0, 10);
+  const payload = {
+    app: 'D & E Finance',
+    exportedAt: new Date().toISOString(),
+    version: '1',
+    config: {
+      categories: S.categories,
+      types: S.types,
+      frequencies: S.frequencies,
+    },
+    entries: S.entries,
+  };
+  dl(new Blob([JSON.stringify(payload, null, 2)], {type: 'application/json'}), `de-finance-backup-${today}.json`);
+  toast('Backup downloaded', 'ok');
+}
+
+async function importBackup(input) {
+  const file = input.files[0];
+  if (!file) return;
+  input.value = '';
+  let payload;
+  try {
+    payload = JSON.parse(await file.text());
+  } catch {
+    toast('Invalid backup file', '');
+    return;
+  }
+  if (!payload.entries || !Array.isArray(payload.entries)) {
+    toast('Backup missing entries', '');
+    return;
+  }
+  const count = payload.entries.length;
+  if (!confirm(`Restore ${count} entries from backup dated ${(payload.exportedAt||'').slice(0,10)}?\n\nThis will REPLACE all current data.`)) return;
+
+  toast('Restoring…', '');
+
+  // Clear Supabase
+  if (S.sbUrl && S.sbKey) {
+    await fetch(`${S.sbUrl}/rest/v1/expenses?id=gt.0`, {
+      method: 'DELETE',
+      headers: { apikey: S.sbKey, Authorization: `Bearer ${S.sbKey}`, 'Content-Type': 'application/json' }
+    });
+  }
+
+  // Re-insert all entries in batches of 50
+  const batch = 50;
+  for (let i = 0; i < payload.entries.length; i += batch) {
+    const chunk = payload.entries.slice(i, i + batch).map(e => ({
+      id: e.id, date: e.date, amount: e.amount,
+      category: e.category, type: e.type, freq: e.freq,
+      for_whom: e.forWhom, paid_by: e.paidBy,
+      saving: e.saving, description: e.desc,
+      month: e.month, added_by: e.addedBy,
+    }));
+    if (S.sbUrl && S.sbKey) {
+      await fetch(`${S.sbUrl}/rest/v1/expenses`, {
+        method: 'POST',
+        headers: { apikey: S.sbKey, Authorization: `Bearer ${S.sbKey}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify(chunk),
+      });
+    }
+  }
+
+  // Restore config if present
+  if (payload.config) {
+    S.categories  = payload.config.categories  || S.categories;
+    S.types       = payload.config.types       || S.types;
+    S.frequencies = payload.config.frequencies || S.frequencies;
+    const saved   = JSON.parse(localStorage.getItem(LS_KEY) || '{}');
+    saved.categories  = S.categories;
+    saved.types       = S.types;
+    saved.frequencies = S.frequencies;
+    localStorage.setItem(LS_KEY, JSON.stringify(saved));
+  }
+
+  // Reload from Supabase
+  S.entries = payload.entries;
+  saveLocal();
+  renderLog();
+  toast(`✓ Restored ${count} entries`, 'ok');
 }
 
 function dl(blob, name) {
