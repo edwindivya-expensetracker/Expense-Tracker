@@ -1482,7 +1482,9 @@ function goPage(name, navEl) {
 // ══════════════════════════════════════════════════
 function buildSelects() {
   const cat = document.getElementById('f-cat');
-  cat.innerHTML = '<option value="">Select…</option>' + S.categories.map(c => `<option>${c}</option>`).join('');
+  const freq = S.entries.reduce((m, e) => { m[e.category] = (m[e.category] || 0) + 1; return m; }, {});
+  const sorted = [...S.categories].sort((a, b) => (freq[b] || 0) - (freq[a] || 0));
+  cat.innerHTML = '<option value="">Select…</option>' + sorted.map(c => `<option>${c}</option>`).join('');
   const typ = document.getElementById('f-type');
   typ.innerHTML = '<option value="">Select…</option>' + S.types.map(t => `<option>${t}</option>`).join('');
   const frq = document.getElementById('f-freq');
