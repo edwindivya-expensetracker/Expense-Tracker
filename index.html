@@ -539,6 +539,54 @@ select.finput option { background: white; color: var(--ink); }
 .echip.for-both { background: var(--amber-bg); border-color: var(--amber-border); color: var(--amber); }
 .echip.paid { font-weight: 600; }
 .echip.saveable { background: var(--green-bg); border-color: #a0d4b8; color: var(--green); }
+.echip.income { background: var(--green-bg); border-color: #a0d4b8; color: var(--green); font-weight: 600; }
+.echip.acct { background: #eef2f7; border-color: #c8d3e0; color: var(--ink2); }
+
+/* ── Accounts (Config) ── */
+.acct-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; border-bottom: 1px solid var(--border);
+}
+.acct-row:last-child { border-bottom: none; }
+.acct-row-main { flex: 1; min-width: 0; }
+.acct-row-name { font-size: 14px; color: var(--ink); font-weight: 600; }
+.acct-row-sub { font-size: 11.5px; color: var(--ink3); margin-top: 2px; }
+.acct-row-bal { font-family: 'Playfair Display', serif; font-size: 16px; color: var(--ink); flex-shrink: 0; }
+.acct-row-bal.liab { color: var(--red); }
+.acct-section-head {
+  font-size: 11px; color: var(--ink3); text-transform: uppercase; letter-spacing: 0.08em;
+  font-weight: 600; padding: 10px 14px 4px;
+}
+.acct-mtm {
+  display: flex; gap: 6px; align-items: center; margin-top: 6px;
+}
+.acct-mtm input {
+  flex: 1; padding: 6px 10px; border: 1px solid var(--border2); border-radius: 8px;
+  font-family: 'Outfit', sans-serif; font-size: 13px; background: var(--surface);
+}
+.acct-mtm button {
+  padding: 6px 12px; border-radius: 8px; border: 1.5px solid var(--green);
+  background: var(--green-bg); color: var(--green); font-family: 'Outfit', sans-serif;
+  font-size: 12px; font-weight: 600; cursor: pointer;
+}
+.acct-editor {
+  display: none; padding: 14px 16px; background: var(--bg2); border-top: 1px solid var(--border);
+}
+.acct-editor.show { display: block; }
+.acct-editor .frow { padding: 8px 0; border-bottom: 1px solid var(--border); }
+.acct-editor .frow:last-of-type { border-bottom: none; }
+.acct-editor select, .acct-editor input[type="text"], .acct-editor input[type="number"], .acct-editor input[type="date"] {
+  flex: 1; padding: 8px 10px; border: 1px solid var(--border2); border-radius: 8px;
+  font-family: 'Outfit', sans-serif; font-size: 14px; background: var(--surface);
+}
+.acct-editor-actions { display: flex; gap: 8px; margin-top: 12px; }
+.acct-editor-actions button { flex: 1; }
+.acct-chip {
+  display: inline-block; font-size: 10.5px; padding: 2px 8px; border-radius: 10px;
+  background: var(--bg); border: 1px solid var(--border2); color: var(--ink2);
+  margin-left: 6px; vertical-align: middle;
+}
+.acct-chip.liab { background: #fff0f0; border-color: #ffb3b3; color: var(--red); }
 .btn-del-entry {
   margin-top: 10px;
   background: none;
@@ -987,6 +1035,10 @@ select.modal-input option { background: white; }
         <input class="finput" id="f-date" type="date">
       </div>
       <div class="frow">
+        <span class="flabel">Account</span>
+        <select class="finput" id="f-account"></select>
+      </div>
+      <div class="frow">
         <span class="flabel">Description</span>
         <input class="finput" id="f-desc" type="text" placeholder="Brief note…">
       </div>
@@ -1002,14 +1054,71 @@ select.modal-input option { background: white; }
     <button class="btn-submit" onclick="submitExpense()">Save Expense</button>
   </div>
 
+  <!-- INCOME PAGE -->
+  <div id="page-income" class="page">
+    <div class="sec-label">Amount</div>
+    <div class="fcard">
+      <div class="frow">
+        <span class="amt-sym">₹</span>
+        <input class="finput" id="i-amount" type="number" inputmode="decimal" placeholder="0.00" style="font-size:30px;font-weight:300">
+      </div>
+    </div>
+
+    <div class="sec-label">Source</div>
+    <div class="fcard">
+      <div class="frow">
+        <span class="flabel">Source</span>
+        <select class="finput" id="i-source"></select>
+      </div>
+      <div class="frow">
+        <span class="flabel">Account</span>
+        <select class="finput" id="i-account"></select>
+      </div>
+    </div>
+
+    <div class="sec-label">Who Earned</div>
+    <div class="fcard">
+      <div class="pill-group">
+        <div class="pill-glabel">Received By</div>
+        <div class="pills">
+          <div class="pill p-edwin active" data-g="received" data-v="Edwin" onclick="pickPill(this)">Edwin</div>
+          <div class="pill p-divya" data-g="received" data-v="Divya" onclick="pickPill(this)">Divya</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec-label">Details</div>
+    <div class="fcard">
+      <div class="frow">
+        <span class="flabel">Date</span>
+        <input class="finput" id="i-date" type="date">
+      </div>
+      <div class="frow">
+        <span class="flabel">Description</span>
+        <input class="finput" id="i-desc" type="text" placeholder="Brief note…">
+      </div>
+    </div>
+
+    <button class="btn-submit" style="background:var(--green)" onclick="submitIncome()">Save Income</button>
+  </div>
+
   <!-- LOG PAGE -->
   <div id="page-log" class="page">
+    <div class="log-bar">
+      <div class="log-chip active" data-k="All" onclick="setLogKind(this)">All</div>
+      <div class="log-chip" data-k="Expense" onclick="setLogKind(this)">Expense</div>
+      <div class="log-chip" data-k="Income" onclick="setLogKind(this)">Income</div>
+    </div>
     <div class="log-bar">
       <div class="log-chip active" data-f="All" onclick="setLogFilter(this)">All</div>
       <div class="log-chip" data-f="Edwin" onclick="setLogFilter(this)">Edwin</div>
       <div class="log-chip" data-f="Divya" onclick="setLogFilter(this)">Divya</div>
       <div class="log-chip" data-f="AJ" onclick="setLogFilter(this)">AJ</div>
       <div class="log-chip" data-f="Both" onclick="setLogFilter(this)">Both</div>
+    </div>
+    <div id="log-account-banner" style="display:none;padding:8px 12px;background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:10px;margin:0 0 10px;font-size:12.5px;color:var(--amber);align-items:center;gap:8px">
+      <span id="log-account-banner-text"></span>
+      <button onclick="clearLogAccountFilter()" style="margin-left:auto;background:none;border:none;color:var(--amber);font-weight:600;cursor:pointer">✕ Clear</button>
     </div>
     <div class="cat-select-wrap">
       <select id="cat-filter-select" class="cat-filter-select" onchange="setCategoryFilter(this.value)">
@@ -1033,6 +1142,52 @@ select.modal-input option { background: white; }
       <div class="period-btn" onclick="setPeriod('year',this)">Full Year</div>
     </div>
 
+    <div class="sec-label">Cash Flow</div>
+    <div class="stat-grid">
+      <div class="stat-card green">
+        <div class="stat-lbl">Income</div>
+        <div class="stat-val" id="d-cf-income" style="color:var(--green)">₹0</div>
+        <div class="stat-sub" id="d-cf-income-sub">0 entries</div>
+      </div>
+      <div class="stat-card amber">
+        <div class="stat-lbl">Expenses</div>
+        <div class="stat-val" id="d-cf-expense">₹0</div>
+        <div class="stat-sub" id="d-cf-expense-sub">0 entries</div>
+      </div>
+    </div>
+    <div class="stat-grid">
+      <div class="stat-card full" id="d-cf-net-card">
+        <div class="stat-lbl">Net (Income − Expenses)</div>
+        <div class="stat-val" id="d-cf-net">₹0</div>
+        <div class="stat-sub" id="d-cf-net-sub">—</div>
+      </div>
+    </div>
+
+    <div class="sec-label">Net Worth</div>
+    <div class="stat-grid">
+      <div class="stat-card full" style="background:#eef4fb;border-color:#bcd2e6">
+        <div class="stat-lbl" style="color:#1a4a7a">Net Worth (today)</div>
+        <div class="stat-val" id="d-networth" style="color:#1a4a7a">₹0</div>
+        <div class="stat-sub" id="d-networth-sub">No accounts yet</div>
+      </div>
+    </div>
+    <div class="stat-grid">
+      <div class="stat-card green">
+        <div class="stat-lbl">Total Assets</div>
+        <div class="stat-val" id="d-assets">₹0</div>
+        <div class="stat-sub" id="d-assets-sub">0 accounts</div>
+      </div>
+      <div class="stat-card" style="background:#fff0f0;border-color:#ffb3b3">
+        <div class="stat-lbl" style="color:#8b0000">Total Liabilities</div>
+        <div class="stat-val" id="d-liab" style="color:#c0392b">₹0</div>
+        <div class="stat-sub" id="d-liab-sub" style="color:#c0392b">0 accounts</div>
+      </div>
+    </div>
+    <div class="fcard" id="d-accounts-card" style="padding:4px 0;display:none">
+      <div id="d-accounts-list"></div>
+    </div>
+
+    <div class="sec-label">Expense Breakdown</div>
     <div class="stat-grid">
       <div class="stat-card amber full">
         <div class="stat-lbl">Total Spent</div>
@@ -1136,12 +1291,76 @@ select.modal-input option { background: white; }
       </div>
     </div>
 
+    <!-- Income Sources -->
+    <div class="sec-label">Income Sources</div>
+    <div class="cfg-card">
+      <div class="cfg-head">Sources <span class="cfg-count" id="src-count"></span></div>
+      <div id="cfg-src-list"></div>
+      <div class="btn-add-row" onclick="toggleAddRow('src')">
+        <div class="add-icon">+</div> Add Source
+      </div>
+      <div class="add-input-row" id="add-src">
+        <input class="cfg-input" id="new-src" placeholder="Source name…">
+        <button class="btn-save-cfg" onclick="addCfgItem('src')">Add</button>
+      </div>
+    </div>
+
+    <!-- Accounts -->
+    <div class="sec-label">Accounts & Balances</div>
+    <div class="cfg-card">
+      <div class="cfg-head">Accounts <span class="cfg-count" id="acct-count"></span></div>
+      <div id="cfg-acct-list"></div>
+      <div class="btn-add-row" onclick="openAccountEditor()">
+        <div class="add-icon">+</div> Add Account
+      </div>
+      <div class="acct-editor" id="acct-editor">
+        <input type="hidden" id="acct-edit-id">
+        <div class="frow">
+          <span class="flabel">Name</span>
+          <input id="acct-name" type="text" placeholder="e.g. HDFC Savings">
+        </div>
+        <div class="frow">
+          <span class="flabel">Type</span>
+          <select id="acct-type" onchange="onAccountTypeChange()">
+            <option value="Bank">Bank</option>
+            <option value="Cash">Cash</option>
+            <option value="Credit Card">Credit Card</option>
+            <option value="Loan">Loan</option>
+            <option value="Investment">Investment</option>
+            <option value="Asset">Asset</option>
+          </select>
+        </div>
+        <div class="frow">
+          <span class="flabel">Opening Balance (₹)</span>
+          <input id="acct-opening" type="number" inputmode="decimal" placeholder="0">
+        </div>
+        <div class="frow">
+          <span class="flabel">Opening Date</span>
+          <input id="acct-opening-date" type="date">
+        </div>
+        <div class="frow" id="acct-cv-row" style="display:none">
+          <span class="flabel">Current Value (₹)</span>
+          <input id="acct-current" type="number" inputmode="decimal" placeholder="0">
+        </div>
+        <div class="frow">
+          <span class="flabel">Notes</span>
+          <input id="acct-notes" type="text" placeholder="Optional…">
+        </div>
+        <div class="acct-editor-actions">
+          <button class="btn-save-cfg" style="background:var(--bg);color:var(--ink);border:1.5px solid var(--border2)" onclick="closeAccountEditor()">Cancel</button>
+          <button class="btn-save-cfg" style="background:var(--ink);color:white;border:none" onclick="saveAccount()">Save Account</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Data -->
     <div class="sec-label">Data</div>
     <div class="cfg-card">
       <div style="padding:16px;display:flex;flex-direction:column;gap:10px">
-        <button class="btn-save-cfg" style="width:100%;background:var(--ink);color:white;border:none" onclick="exportXLSX()">⬇ Export as Excel (.xlsx)</button>
-        <button class="btn-save-cfg" style="width:100%;background:var(--bg);color:var(--ink);border:1.5px solid var(--border2);margin-top:0" onclick="exportGSheet()">↗ Export for Google Sheets</button>
+        <button class="btn-save-cfg" style="width:100%;background:var(--ink);color:white;border:none" onclick="exportXLSX()">⬇ Export Expenses (.xlsx)</button>
+        <button class="btn-save-cfg" style="width:100%;background:var(--bg);color:var(--ink);border:1.5px solid var(--border2);margin-top:0" onclick="exportGSheet()">↗ Expenses for Google Sheets</button>
+        <button class="btn-save-cfg" style="width:100%;background:var(--bg);color:var(--green);border:1.5px solid var(--green);margin-top:0" onclick="exportIncomeCSV()">⬇ Export Income (.csv)</button>
+        <button class="btn-save-cfg" style="width:100%;background:var(--bg);color:var(--ink);border:1.5px solid var(--border2);margin-top:0" onclick="exportAccountsCSV()">⬇ Export Accounts (.csv)</button>
         <hr style="border:none;border-top:1px solid var(--border);margin:2px 0">
         <button class="btn-save-cfg" style="width:100%;background:var(--green);color:white;border:none" onclick="exportBackup()">⬇ Download Backup (.json)</button>
         <label style="width:100%;margin:0">
@@ -1154,10 +1373,10 @@ select.modal-input option { background: white; }
   </div>
 
   <!-- EDIT MODAL -->
-  <div class="modal-overlay" id="edit-modal">
+  <div class="modal-overlay" id="edit-modal" data-kind="expense">
     <div class="modal-box">
       <div class="modal-title">
-        Edit Entry
+        <span id="edit-modal-title">Edit Entry</span>
         <button class="modal-close" onclick="closeEditModal()">✕</button>
       </div>
       <input type="hidden" id="edit-id">
@@ -1166,17 +1385,25 @@ select.modal-input option { background: white; }
         <div class="modal-label">Amount (₹)</div>
         <input class="modal-input" id="edit-amount" type="number" inputmode="decimal">
       </div>
-      <div class="modal-field">
+      <div class="modal-field edit-only-expense">
         <div class="modal-label">Category</div>
         <select class="modal-input" id="edit-cat"></select>
       </div>
-      <div class="modal-field">
+      <div class="modal-field edit-only-expense">
         <div class="modal-label">Type</div>
         <select class="modal-input" id="edit-type"></select>
       </div>
-      <div class="modal-field">
+      <div class="modal-field edit-only-expense">
         <div class="modal-label">Frequency</div>
         <select class="modal-input" id="edit-freq"></select>
+      </div>
+      <div class="modal-field edit-only-income" style="display:none">
+        <div class="modal-label">Source</div>
+        <select class="modal-input" id="edit-source"></select>
+      </div>
+      <div class="modal-field">
+        <div class="modal-label">Account</div>
+        <select class="modal-input" id="edit-account"></select>
       </div>
       <div class="modal-field">
         <div class="modal-label">Date</div>
@@ -1186,7 +1413,7 @@ select.modal-input option { background: white; }
         <div class="modal-label">Description</div>
         <input class="modal-input" id="edit-desc" type="text" placeholder="Brief note…">
       </div>
-      <div class="modal-field">
+      <div class="modal-field edit-only-expense">
         <div class="modal-label">Expense For</div>
         <div class="modal-pills">
           <div class="modal-pill mp-both" data-mg="for" data-mv="Both" onclick="pickModalPill(this)">Both</div>
@@ -1195,14 +1422,21 @@ select.modal-input option { background: white; }
           <div class="modal-pill mp-aj" data-mg="for" data-mv="AJ" onclick="pickModalPill(this)">AJ</div>
         </div>
       </div>
-      <div class="modal-field">
+      <div class="modal-field edit-only-expense">
         <div class="modal-label">Paid By</div>
         <div class="modal-pills">
           <div class="modal-pill mp-edwin" data-mg="paid" data-mv="Edwin" onclick="pickModalPill(this)">Edwin</div>
           <div class="modal-pill mp-divya" data-mg="paid" data-mv="Divya" onclick="pickModalPill(this)">Divya</div>
         </div>
       </div>
-      <div class="modal-field">
+      <div class="modal-field edit-only-income" style="display:none">
+        <div class="modal-label">Received By</div>
+        <div class="modal-pills">
+          <div class="modal-pill mp-edwin" data-mg="received" data-mv="Edwin" onclick="pickModalPill(this)">Edwin</div>
+          <div class="modal-pill mp-divya" data-mg="received" data-mv="Divya" onclick="pickModalPill(this)">Divya</div>
+        </div>
+      </div>
+      <div class="modal-field edit-only-expense">
         <div class="modal-label">Possible Saving?</div>
         <div class="modal-pills">
           <div class="modal-pill" data-mg="saving" data-mv="Yes" onclick="pickModalPill(this)">Yes</div>
@@ -1219,6 +1453,11 @@ select.modal-input option { background: white; }
       <div class="nav-active-bar"></div>
       <div class="nav-icon">＋</div>
       <div class="nav-label">ADD</div>
+    </div>
+    <div class="nav-item" onclick="goPage('income',this)">
+      <div class="nav-active-bar"></div>
+      <div class="nav-icon" style="color:var(--green)">＋₹</div>
+      <div class="nav-label">INCOME</div>
     </div>
     <div class="nav-item" onclick="goPage('log',this)">
       <div class="nav-active-bar"></div>
@@ -1250,8 +1489,30 @@ const DEFAULTS = {
     "Fitness","Alcohol","Home Decor","Donations","Friends","Family","Gift",
     "Vacation","Movie","Sundries","Insurance","ULIP","Tax","Others"],
   types: ["Essentials","Non-Essentials","Fun"],
-  frequencies: ["Monthly","Weekly","Annual","One-time"]
+  frequencies: ["Monthly","Weekly","Annual","One-time"],
+  incomeSources: ["Salary","Business","Restaurant","Dividends","Interest","Other"],
+  accounts: []
 };
+
+// One-time Supabase migration (run in SQL editor; safe to re-run):
+//   ALTER TABLE expenses ADD COLUMN IF NOT EXISTS account BIGINT NULL;
+//   CREATE TABLE IF NOT EXISTS accounts (
+//     id BIGINT PRIMARY KEY, name TEXT NOT NULL, type TEXT NOT NULL,
+//     opening_balance NUMERIC(14,2) NOT NULL DEFAULT 0, opening_date DATE,
+//     current_value NUMERIC(14,2), is_liability BOOLEAN NOT NULL DEFAULT FALSE,
+//     currency TEXT NOT NULL DEFAULT 'INR', notes TEXT,
+//     archived BOOLEAN NOT NULL DEFAULT FALSE,
+//     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+//   );
+//   CREATE TABLE IF NOT EXISTS income (
+//     id BIGINT PRIMARY KEY, date DATE NOT NULL, amount NUMERIC(14,2) NOT NULL,
+//     source TEXT NOT NULL, received_by TEXT, account BIGINT NULL,
+//     description TEXT, month TEXT, added_by TEXT,
+//     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+//   );
+//   CREATE INDEX IF NOT EXISTS idx_income_date   ON income(date DESC);
+//   CREATE INDEX IF NOT EXISTS idx_income_month  ON income(month);
+//   CREATE INDEX IF NOT EXISTS idx_expenses_acct ON expenses(account);
 
 const FAMILY_PIN = "1234"; // ← Change this to your preferred PIN
 const LS_KEY = 'de_finance_v2';
@@ -1262,11 +1523,16 @@ const LS_KEY = 'de_finance_v2';
 let S = {
   sbUrl: '', sbKey: '',
   categories: [], types: [], frequencies: [],
+  incomeSources: [],
   entries: [],
+  income: [],
+  accounts: [],
   dashPeriod: 'month',
   logFilter: 'All',
   logCategoryFilter: 'All',
-  logSearch: ''
+  logSearch: '',
+  logKind: 'All',
+  logAccountFilter: null
 };
 let currentUser = '';
 let pinBuffer = '';
@@ -1284,6 +1550,9 @@ function loadLocal() {
   if (!S.categories.length) S.categories = [...DEFAULTS.categories];
   if (!S.types.length) S.types = [...DEFAULTS.types];
   if (!S.frequencies.length) S.frequencies = [...DEFAULTS.frequencies];
+  if (!Array.isArray(S.incomeSources) || !S.incomeSources.length) S.incomeSources = [...DEFAULTS.incomeSources];
+  if (!Array.isArray(S.income)) S.income = [];
+  if (!Array.isArray(S.accounts)) S.accounts = [];
 }
 
 function saveLocal() {
@@ -1316,7 +1585,11 @@ async function sbFetch(path, opts={}) {
 
 async function syncNow() {
   setSyncState('syncing');
-  const rows = await sbFetch('expenses?select=*&order=date.desc');
+  const [rows, acctRows, incRows] = await Promise.all([
+    sbFetch('expenses?select=*&order=date.desc'),
+    sbFetch('accounts?select=*&order=created_at.asc'),
+    sbFetch('income?select=*&order=date.desc')
+  ]);
   if (rows && Array.isArray(rows)) {
     // Merge: remote is source of truth, merge with any local-only entries
     const remoteIds = new Set(rows.map(r => r.id));
@@ -1326,13 +1599,41 @@ async function syncNow() {
       category: r.category, type: r.type, freq: r.freq,
       forWhom: r.for_whom, paidBy: r.paid_by,
       saving: r.saving, desc: r.description, month: r.month,
-      addedBy: r.added_by
+      addedBy: r.added_by,
+      account: r.account != null ? Number(r.account) : null
     })), ...localOnly];
+  }
+  if (acctRows && Array.isArray(acctRows)) {
+    const remoteIds = new Set(acctRows.map(r => r.id));
+    const localOnly = S.accounts.filter(a => !remoteIds.has(a.id));
+    S.accounts = [...acctRows.map(r => ({
+      id: Number(r.id), name: r.name, type: r.type,
+      openingBalance: Number(r.opening_balance || 0),
+      openingDate: r.opening_date || '',
+      currentValue: r.current_value != null ? Number(r.current_value) : null,
+      isLiability: !!r.is_liability,
+      currency: r.currency || 'INR',
+      notes: r.notes || '',
+      archived: !!r.archived
+    })), ...localOnly];
+  }
+  if (incRows && Array.isArray(incRows)) {
+    const remoteIds = new Set(incRows.map(r => r.id));
+    const localOnly = S.income.filter(i => !remoteIds.has(i.id));
+    S.income = [...incRows.map(r => ({
+      id: r.id, date: r.date, amount: Number(r.amount),
+      source: r.source, receivedBy: r.received_by,
+      account: r.account != null ? Number(r.account) : null,
+      desc: r.description, month: r.month, addedBy: r.added_by
+    })), ...localOnly];
+  }
+  if (rows && Array.isArray(rows)) {
     saveLocal();
     setSyncState('online');
-    toast('✓ Synced — ' + S.entries.length + ' entries', 'ok');
+    toast('✓ Synced — ' + S.entries.length + ' expenses, ' + S.income.length + ' income', 'ok');
     if (document.getElementById('page-log').classList.contains('active')) renderLog();
     if (document.getElementById('page-dash').classList.contains('active')) renderDash();
+    if (document.getElementById('page-cfg').classList.contains('active')) renderCfg();
   } else {
     setSyncState('offline');
     toast('Offline — showing local data', '');
@@ -1475,6 +1776,7 @@ function goPage(name, navEl) {
   if (name === 'log') renderLog();
   if (name === 'dash') renderDash();
   if (name === 'cfg') renderCfg();
+  if (name === 'income') renderIncomeForm();
 }
 
 // ══════════════════════════════════════════════════
@@ -1489,6 +1791,21 @@ function buildSelects() {
   typ.innerHTML = '<option value="">Select…</option>' + S.types.map(t => `<option>${t}</option>`).join('');
   const frq = document.getElementById('f-freq');
   frq.innerHTML = '<option value="">Select…</option>' + S.frequencies.map(f => `<option>${f}</option>`).join('');
+
+  const acctOpts = '<option value="">— None —</option>' +
+    S.accounts.filter(a => !a.archived)
+      .map(a => `<option value="${a.id}">${a.name}</option>`).join('');
+  ['f-account','i-account','edit-account'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.innerHTML = acctOpts;
+  });
+
+  const srcSel = document.getElementById('i-source');
+  if (srcSel) srcSel.innerHTML = '<option value="">Select…</option>' + S.incomeSources.map(s => `<option>${s}</option>`).join('');
+}
+
+function renderIncomeForm() {
+  buildSelects();
+  document.getElementById('i-date').value = new Date().toISOString().split('T')[0];
 }
 
 function pickPill(el) {
@@ -1515,6 +1832,8 @@ async function submitExpense() {
   const forWhom = getPill('for');
   const paidBy = getPill('paid');
   const saving = getPill('saving');
+  const acctRaw = document.getElementById('f-account')?.value || '';
+  const account = acctRaw ? Number(acctRaw) : null;
 
   if (!amount || amount <= 0) return toast('Enter a valid amount', 'err');
   if (!category) return toast('Select a category', 'err');
@@ -1525,7 +1844,7 @@ async function submitExpense() {
   const entry = {
     id: Date.now(),
     date, amount, category, type, freq,
-    forWhom, paidBy, saving, desc,
+    forWhom, paidBy, saving, desc, account,
     month: date.slice(0,7),
     addedBy: currentUser
   };
@@ -1544,7 +1863,8 @@ async function submitExpense() {
       category: entry.category, type: entry.type, freq: entry.freq,
       for_whom: entry.forWhom, paid_by: entry.paidBy,
       saving: entry.saving, description: entry.desc,
-      month: entry.month, added_by: entry.addedBy
+      month: entry.month, added_by: entry.addedBy,
+      account: entry.account
     })
   });
 
@@ -1565,19 +1885,111 @@ function resetForm() {
   document.getElementById('f-type').value = '';
   document.getElementById('f-freq').value = '';
   document.getElementById('f-desc').value = '';
+  const acct = document.getElementById('f-account'); if (acct) acct.value = '';
   setDefaultDate();
   document.querySelectorAll('.pill[data-g="for"]').forEach(p => p.classList.toggle('active', p.dataset.v === 'Both'));
   document.querySelectorAll('.pill[data-g="paid"]').forEach(p => p.classList.toggle('active', p.dataset.v === 'Edwin'));
   document.querySelectorAll('.pill[data-g="saving"]').forEach(p => p.classList.toggle('active', p.dataset.v === 'No'));
 }
 
+async function submitIncome() {
+  const amount = parseFloat(document.getElementById('i-amount').value);
+  const source = document.getElementById('i-source').value;
+  const date = document.getElementById('i-date').value;
+  const desc = document.getElementById('i-desc').value.trim();
+  const receivedBy = getPill('received');
+  const acctRaw = document.getElementById('i-account').value;
+  const account = acctRaw ? Number(acctRaw) : null;
+
+  if (!amount || amount <= 0) return toast('Enter a valid amount', 'err');
+  if (!source) return toast('Select a source', 'err');
+  if (!date) return toast('Select a date', 'err');
+  if (!receivedBy) return toast('Pick who received it', 'err');
+
+  const entry = {
+    id: Date.now(),
+    date, amount, source, receivedBy, account, desc,
+    month: date.slice(0,7),
+    addedBy: currentUser
+  };
+  S.income.unshift(entry);
+  saveLocal();
+
+  setSyncState('syncing');
+  const ok = await sbFetch('income', {
+    method: 'POST',
+    prefer: 'return=minimal',
+    body: JSON.stringify({
+      id: entry.id, date: entry.date, amount: entry.amount,
+      source: entry.source, received_by: entry.receivedBy,
+      account: entry.account, description: entry.desc,
+      month: entry.month, added_by: entry.addedBy
+    })
+  });
+  if (ok) { setSyncState('online'); toast('✓ Income saved & synced', 'ok'); }
+  else    { setSyncState('offline'); toast('Saved locally (offline)', ''); }
+  resetIncomeForm();
+}
+
+function resetIncomeForm() {
+  document.getElementById('i-amount').value = '';
+  document.getElementById('i-source').value = '';
+  document.getElementById('i-desc').value = '';
+  document.getElementById('i-account').value = '';
+  document.getElementById('i-date').value = new Date().toISOString().split('T')[0];
+  document.querySelectorAll('.pill[data-g="received"]').forEach(p => p.classList.toggle('active', p.dataset.v === 'Edwin'));
+}
+
+async function deleteIncome(id) {
+  if (!confirm('Delete this income entry?')) return;
+  S.income = S.income.filter(i => i.id !== id);
+  saveLocal();
+  const card = document.getElementById('inc-' + id);
+  if (card) card.remove();
+  if (S.sbUrl && S.sbKey) {
+    try {
+      await fetch(`${S.sbUrl}/rest/v1/income?id=eq.${id}`, {
+        method: 'DELETE',
+        headers: { apikey: S.sbKey, Authorization: `Bearer ${S.sbKey}`, 'Content-Type': 'application/json' }
+      });
+    } catch(e) {}
+  }
+  toast('Income deleted', 'ok');
+  renderLog();
+}
+
 // ══════════════════════════════════════════════════
 //  LOG
 // ══════════════════════════════════════════════════
 function setLogFilter(el) {
-  document.querySelectorAll('.log-chip').forEach(c => c.classList.remove('active'));
+  el.parentElement.querySelectorAll('.log-chip').forEach(c => c.classList.remove('active'));
   el.classList.add('active');
   S.logFilter = el.dataset.f;
+  renderLog();
+}
+
+function setLogKind(el) {
+  el.parentElement.querySelectorAll('.log-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  S.logKind = el.dataset.k;
+  renderLog();
+}
+
+function setLogAccountFilter(id) {
+  S.logAccountFilter = id;
+  S.logKind = 'All';
+  S.logFilter = 'All';
+  S.logCategoryFilter = 'All';
+  document.querySelectorAll('#page-log .log-bar').forEach(bar => {
+    bar.querySelectorAll('.log-chip').forEach(c => c.classList.toggle('active', c.dataset.k === 'All' || c.dataset.f === 'All'));
+  });
+  const navItem = [...document.querySelectorAll('.nav-item')]
+    .find(n => n.querySelector('.nav-label')?.textContent.trim() === 'LOG');
+  if (navItem) goPage('log', navItem); else renderLog();
+}
+
+function clearLogAccountFilter() {
+  S.logAccountFilter = null;
   renderLog();
 }
 
@@ -1604,27 +2016,53 @@ function hl(text, q) {
   return String(text).replace(new RegExp(esc, 'gi'), m => `<span class="sh">${m}</span>`);
 }
 
+function setModalKind(kind) {
+  const modal = document.getElementById('edit-modal');
+  modal.dataset.kind = kind;
+  document.getElementById('edit-modal-title').textContent = kind === 'income' ? 'Edit Income' : 'Edit Expense';
+  document.querySelectorAll('.edit-only-expense').forEach(el => el.style.display = kind === 'expense' ? '' : 'none');
+  document.querySelectorAll('.edit-only-income') .forEach(el => el.style.display = kind === 'income'  ? '' : 'none');
+}
+
+function fillAccountSelect(selId, currentVal) {
+  const el = document.getElementById(selId);
+  el.innerHTML = '<option value="">— None —</option>' +
+    S.accounts.filter(a => !a.archived).map(a => `<option value="${a.id}"${a.id === currentVal ? ' selected' : ''}>${a.name}</option>`).join('');
+}
+
 function openEditModal(id) {
   const e = S.entries.find(x => x.id === id);
   if (!e) return;
-  // Populate selects
-  const catSel = document.getElementById('edit-cat');
-  catSel.innerHTML = S.categories.map(c => `<option ${c===e.category?'selected':''}>${c}</option>`).join('');
-  const typSel = document.getElementById('edit-type');
-  typSel.innerHTML = S.types.map(t => `<option ${t===e.type?'selected':''}>${t}</option>`).join('');
-  const frqSel = document.getElementById('edit-freq');
-  frqSel.innerHTML = S.frequencies.map(f => `<option ${f===e.freq?'selected':''}>${f}</option>`).join('');
-  // Populate fields
+  setModalKind('expense');
+  document.getElementById('edit-cat').innerHTML  = S.categories.map(c => `<option ${c===e.category?'selected':''}>${c}</option>`).join('');
+  document.getElementById('edit-type').innerHTML = S.types.map(t => `<option ${t===e.type?'selected':''}>${t}</option>`).join('');
+  document.getElementById('edit-freq').innerHTML = S.frequencies.map(f => `<option ${f===e.freq?'selected':''}>${f}</option>`).join('');
+  fillAccountSelect('edit-account', e.account != null ? Number(e.account) : '');
   document.getElementById('edit-id').value = id;
   document.getElementById('edit-amount').value = e.amount;
   document.getElementById('edit-date').value = e.date;
   document.getElementById('edit-desc').value = e.desc || '';
-  // Set pills
   ['for','paid','saving'].forEach(g => {
     const map = {for: e.forWhom, paid: e.paidBy, saving: e.saving};
     document.querySelectorAll(`.modal-pill[data-mg="${g}"]`).forEach(p => {
       p.classList.toggle('active', p.dataset.mv === map[g]);
     });
+  });
+  document.getElementById('edit-modal').classList.add('show');
+}
+
+function openEditIncomeModal(id) {
+  const i = S.income.find(x => x.id === id);
+  if (!i) return;
+  setModalKind('income');
+  document.getElementById('edit-source').innerHTML = S.incomeSources.map(s => `<option ${s===i.source?'selected':''}>${s}</option>`).join('');
+  fillAccountSelect('edit-account', i.account != null ? Number(i.account) : '');
+  document.getElementById('edit-id').value = id;
+  document.getElementById('edit-amount').value = i.amount;
+  document.getElementById('edit-date').value = i.date;
+  document.getElementById('edit-desc').value = i.desc || '';
+  document.querySelectorAll('.modal-pill[data-mg="received"]').forEach(p => {
+    p.classList.toggle('active', p.dataset.mv === i.receivedBy);
   });
   document.getElementById('edit-modal').classList.add('show');
 }
@@ -1644,51 +2082,80 @@ function getModalPill(g) {
 }
 
 async function saveEdit() {
+  const kind = document.getElementById('edit-modal').dataset.kind || 'expense';
   const id = Number(document.getElementById('edit-id').value);
+  const date = document.getElementById('edit-date').value;
+  const acctRaw = document.getElementById('edit-account').value;
+  const account = acctRaw ? Number(acctRaw) : null;
+
+  if (kind === 'income') {
+    const idx = S.income.findIndex(x => x.id === id);
+    if (idx === -1) return;
+    const updated = {
+      ...S.income[idx],
+      amount: parseFloat(document.getElementById('edit-amount').value),
+      source: document.getElementById('edit-source').value,
+      date,
+      desc: document.getElementById('edit-desc').value.trim(),
+      receivedBy: getModalPill('received'),
+      account,
+      month: date.slice(0,7)
+    };
+    S.income[idx] = updated;
+    saveLocal();
+    closeEditModal();
+    renderLog();
+    if (S.sbUrl && S.sbKey) {
+      try {
+        await fetch(`${S.sbUrl}/rest/v1/income?id=eq.${id}`, {
+          method: 'PATCH',
+          headers: { apikey: S.sbKey, Authorization: `Bearer ${S.sbKey}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+          body: JSON.stringify({
+            amount: updated.amount, source: updated.source,
+            date: updated.date, description: updated.desc,
+            received_by: updated.receivedBy, account: updated.account,
+            month: updated.month
+          })
+        });
+      } catch(e) {}
+    }
+    toast('✓ Income updated', 'ok');
+    return;
+  }
+
+  // Expense path
   const idx = S.entries.findIndex(x => x.id === id);
   if (idx === -1) return;
-
   const updated = {
     ...S.entries[idx],
     amount: parseFloat(document.getElementById('edit-amount').value),
     category: document.getElementById('edit-cat').value,
     type: document.getElementById('edit-type').value,
     freq: document.getElementById('edit-freq').value,
-    date: document.getElementById('edit-date').value,
+    date,
     desc: document.getElementById('edit-desc').value.trim(),
     forWhom: getModalPill('for'),
     paidBy: getModalPill('paid'),
     saving: getModalPill('saving'),
-    month: document.getElementById('edit-date').value.slice(0,7)
+    account,
+    month: date.slice(0,7)
   };
-
   S.entries[idx] = updated;
   saveLocal();
   closeEditModal();
   renderLog();
-
-  // Update in Supabase
   if (S.sbUrl && S.sbKey) {
     try {
-      await fetch(S.sbUrl + '/rest/v1/expenses?id=eq.' + id, {
+      await fetch(`${S.sbUrl}/rest/v1/expenses?id=eq.${id}`, {
         method: 'PATCH',
-        headers: {
-          'apikey': S.sbKey,
-          'Authorization': 'Bearer ' + S.sbKey,
-          'Content-Type': 'application/json',
-          'Prefer': 'return=minimal'
-        },
+        headers: { apikey: S.sbKey, Authorization: `Bearer ${S.sbKey}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
         body: JSON.stringify({
-          amount: updated.amount,
-          category: updated.category,
-          type: updated.type,
-          freq: updated.freq,
-          date: updated.date,
-          description: updated.desc,
-          for_whom: updated.forWhom,
-          paid_by: updated.paidBy,
-          saving: updated.saving,
-          month: updated.month
+          amount: updated.amount, category: updated.category,
+          type: updated.type, freq: updated.freq,
+          date: updated.date, description: updated.desc,
+          for_whom: updated.forWhom, paid_by: updated.paidBy,
+          saving: updated.saving, month: updated.month,
+          account: updated.account
         })
       });
     } catch(e) {}
@@ -1738,31 +2205,79 @@ function renderLog() {
   renderCategoryBar();
   const list = document.getElementById('log-list');
   const totalBar = document.getElementById('log-total-bar');
-  let entries = S.entries;
-  if (S.logFilter !== 'All') entries = entries.filter(e => e.forWhom === S.logFilter);
-  if (S.logCategoryFilter !== 'All') entries = entries.filter(e => e.category === S.logCategoryFilter);
+  const acctBanner = document.getElementById('log-account-banner');
+
+  // Show/hide account-filter banner
+  if (S.logAccountFilter != null) {
+    const a = S.accounts.find(x => x.id === S.logAccountFilter);
+    if (a) {
+      document.getElementById('log-account-banner-text').textContent = `Filtering by account: ${a.name}`;
+      acctBanner.style.display = 'flex';
+    } else {
+      S.logAccountFilter = null;
+      acctBanner.style.display = 'none';
+    }
+  } else {
+    acctBanner.style.display = 'none';
+  }
+
+  // Build merged stream
+  const acctName = id => (S.accounts.find(a => a.id === id) || {}).name || '';
+  let items = [
+    ...S.entries.map(e => ({...e, _kind:'expense', _searchSrc: [e.category, e.desc, e.forWhom, e.paidBy, e.type, e.freq, e.addedBy, acctName(e.account), String(e.amount), e.date]})),
+    ...S.income .map(i => ({...i, _kind:'income', _searchSrc: [i.source, i.desc, i.receivedBy, i.addedBy, acctName(i.account), String(i.amount), i.date]}))
+  ];
+
+  if (S.logKind === 'Expense') items = items.filter(x => x._kind === 'expense');
+  if (S.logKind === 'Income')  items = items.filter(x => x._kind === 'income');
+  if (S.logAccountFilter != null) items = items.filter(x => x.account === S.logAccountFilter);
+
+  if (S.logFilter !== 'All') {
+    items = items.filter(x => x._kind === 'income' ? x.receivedBy === S.logFilter : x.forWhom === S.logFilter);
+  }
+  if (S.logCategoryFilter !== 'All') {
+    items = items.filter(x => x._kind === 'expense' && x.category === S.logCategoryFilter);
+  }
   if (S.logSearch) {
     const q = S.logSearch.toLowerCase();
-    entries = entries.filter(e =>
-      [e.category, e.desc, e.forWhom, e.paidBy, e.type, e.freq, e.addedBy, String(e.amount), e.date]
-        .some(v => v && String(v).toLowerCase().includes(q))
-    );
+    items = items.filter(x => x._searchSrc.some(v => v && String(v).toLowerCase().includes(q)));
   }
-  if (entries.length) {
-    const total = entries.reduce((sum, e) => sum + Number(e.amount), 0);
-    totalBar.innerHTML = `<span class="ltb-label">${entries.length} expense${entries.length !== 1 ? 's' : ''}</span><span class="ltb-amt">₹${total.toLocaleString('en-IN')}</span>`;
+
+  items.sort((a,b) => (b.date||'').localeCompare(a.date||''));
+
+  // Totals bar
+  if (items.length) {
+    const expTotal = items.filter(x => x._kind === 'expense').reduce((s,x) => s + Number(x.amount), 0);
+    const incTotal = items.filter(x => x._kind === 'income') .reduce((s,x) => s + Number(x.amount), 0);
+    let inner = '';
+    if (S.logKind === 'Income') {
+      inner = `<span class="ltb-label">${items.length} income</span><span class="ltb-amt" style="color:var(--green)">+₹${incTotal.toLocaleString('en-IN')}</span>`;
+    } else if (S.logKind === 'Expense') {
+      inner = `<span class="ltb-label">${items.length} expense${items.length !== 1 ? 's' : ''}</span><span class="ltb-amt">₹${expTotal.toLocaleString('en-IN')}</span>`;
+    } else {
+      const net = incTotal - expTotal;
+      const netColor = net >= 0 ? 'var(--green)' : 'var(--red)';
+      inner = `<span class="ltb-label">${items.length} entries</span><span class="ltb-amt" style="color:${netColor}">${net>=0?'+':''}₹${net.toLocaleString('en-IN')}</span>`;
+    }
+    totalBar.innerHTML = inner;
     totalBar.style.display = 'flex';
   } else {
     totalBar.style.display = 'none';
   }
-  if (!entries.length) {
-    list.innerHTML = `<div class="no-data">No entries yet.<br>Tap + to add your first expense.</div>`;
+
+  if (!items.length) {
+    list.innerHTML = `<div class="no-data">No entries match.<br>Try clearing filters or tap + to add one.</div>`;
     return;
   }
+
   const q = S.logSearch;
-  list.innerHTML = entries.map(e => {
-    const fc = 'for-' + (e.forWhom || 'both').toLowerCase();
-    return `
+  list.innerHTML = items.map(x => x._kind === 'income' ? renderIncomeCard(x, q) : renderExpenseCard(x, q)).join('');
+}
+
+function renderExpenseCard(e, q) {
+  const fc = 'for-' + (e.forWhom || 'both').toLowerCase();
+  const an = (S.accounts.find(a => a.id === e.account) || {}).name;
+  return `
     <div class="entry-card" id="entry-${e.id}">
       <div class="entry-left">
         <div class="entry-cat">${hl(e.category, q)}</div>
@@ -1773,6 +2288,7 @@ function renderLog() {
           <div class="echip">${hl(e.type, q)}</div>
           <div class="echip">${hl(e.freq, q)}</div>
           ${e.saving === 'Yes' ? '<div class="echip saveable">💡 Saveable</div>' : ''}
+          ${an ? `<div class="echip acct">⊟ ${hl(an, q)}</div>` : ''}
         </div>
         ${e.addedBy ? `<div class="entry-by" style="margin-top:6px;font-size:11px;color:var(--ink3)">Added by ${hl(e.addedBy, q)}</div>` : ''}
         <div style="display:flex;gap:8px;margin-top:10px">
@@ -1785,7 +2301,31 @@ function renderLog() {
         <div class="entry-date">${fmtDate(e.date)}</div>
       </div>
     </div>`;
-  }).join('');
+}
+
+function renderIncomeCard(i, q) {
+  const an = (S.accounts.find(a => a.id === i.account) || {}).name;
+  return `
+    <div class="entry-card" id="inc-${i.id}">
+      <div class="entry-left">
+        <div class="entry-cat">${hl(i.source, q)}</div>
+        ${i.desc ? `<div class="entry-desc">${hl(i.desc, q)}</div>` : ''}
+        <div class="entry-chips">
+          <div class="echip income">+ Income</div>
+          <div class="echip paid">By: ${hl(i.receivedBy, q)}</div>
+          ${an ? `<div class="echip acct">⊞ ${hl(an, q)}</div>` : ''}
+        </div>
+        ${i.addedBy ? `<div class="entry-by" style="margin-top:6px;font-size:11px;color:var(--ink3)">Added by ${hl(i.addedBy, q)}</div>` : ''}
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn-del-entry" style="background:none;border:1px solid #c8e0f8;color:var(--blue);padding:5px 14px;border-radius:8px;font-size:12px;font-family:'Outfit',sans-serif;cursor:pointer" onclick="openEditIncomeModal(${i.id})">✏ Edit</button>
+          <button class="btn-del-entry" onclick="deleteIncome(${i.id})">🗑 Delete</button>
+        </div>
+      </div>
+      <div class="entry-right">
+        <div class="entry-amount" style="color:var(--green)">+₹${Number(i.amount).toLocaleString('en-IN')}</div>
+        <div class="entry-date">${fmtDate(i.date)}</div>
+      </div>
+    </div>`;
 }
 
 // ══════════════════════════════════════════════════
@@ -1798,22 +2338,85 @@ function setPeriod(p, el) {
   renderDash();
 }
 
-function filteredEntries() {
+function inPeriod(dateStr) {
+  if (!dateStr) return false;
   const now = new Date();
-  return S.entries.filter(e => {
-    const d = new Date(e.date + 'T00:00:00');
-    if (S.dashPeriod === 'month') return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-    if (S.dashPeriod === 'quarter') {
-      const q = Math.floor(now.getMonth() / 3);
-      return Math.floor(d.getMonth() / 3) === q && d.getFullYear() === now.getFullYear();
-    }
-    return true;
-  });
+  const d = new Date(dateStr + 'T00:00:00');
+  if (S.dashPeriod === 'month')   return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  if (S.dashPeriod === 'quarter') return Math.floor(d.getMonth()/3) === Math.floor(now.getMonth()/3) && d.getFullYear() === now.getFullYear();
+  return true;
+}
+
+function filteredEntries() { return S.entries.filter(e => inPeriod(e.date)); }
+function filteredIncome()  { return S.income .filter(i => inPeriod(i.date)); }
+
+// ── Balances & net worth ─────────────────────────────────────────────
+function accountBalance(acct) {
+  // Manual valuation: Investment / Asset / Loan use current_value (mark-to-market)
+  if (acct.type === 'Investment' || acct.type === 'Asset' || acct.type === 'Loan') {
+    return Number(acct.currentValue ?? acct.openingBalance ?? 0);
+  }
+  // Computed: Bank / Cash / Credit Card
+  const inflow  = S.income .filter(i => i.account === acct.id).reduce((s,i) => s + Number(i.amount), 0);
+  const outflow = S.entries.filter(e => e.account === acct.id).reduce((s,e) => s + Number(e.amount), 0);
+  return Number(acct.openingBalance || 0) + inflow - outflow;
+}
+
+function netWorth() {
+  return S.accounts.filter(a => !a.archived)
+    .reduce((s, a) => s + accountBalance(a) * (a.isLiability ? -1 : 1), 0);
 }
 
 function renderDash() {
+  // ── Cash Flow (period-aware) ──
   const es = filteredEntries();
-  const total = es.reduce((s,e) => s + Number(e.amount), 0);
+  const inc = filteredIncome();
+  const incTotal = inc.reduce((s,i) => s + Number(i.amount), 0);
+  const expTotal = es.reduce((s,e) => s + Number(e.amount), 0);
+  const net = incTotal - expTotal;
+  document.getElementById('d-cf-income').textContent  = '₹' + fmt(incTotal);
+  document.getElementById('d-cf-income-sub').textContent = inc.length + ' entries';
+  document.getElementById('d-cf-expense').textContent = '₹' + fmt(expTotal);
+  document.getElementById('d-cf-expense-sub').textContent = es.length + ' entries';
+  const netEl = document.getElementById('d-cf-net');
+  netEl.textContent = (net >= 0 ? '+₹' : '−₹') + fmt(Math.abs(net));
+  netEl.style.color = net >= 0 ? 'var(--green)' : 'var(--red)';
+  document.getElementById('d-cf-net-sub').textContent = net >= 0 ? 'Surplus for this period' : 'Deficit for this period';
+  const netCard = document.getElementById('d-cf-net-card');
+  netCard.style.background  = net >= 0 ? 'var(--green-bg)' : '#fff0f0';
+  netCard.style.borderColor = net >= 0 ? '#a0d4b8' : '#ffb3b3';
+
+  // ── Net Worth (always today) ──
+  const active = S.accounts.filter(a => !a.archived);
+  const assetsTotal = active.filter(a => !a.isLiability).reduce((s,a) => s + accountBalance(a), 0);
+  const liabTotal   = active.filter(a =>  a.isLiability).reduce((s,a) => s + accountBalance(a), 0);
+  const nw = assetsTotal - liabTotal;
+  document.getElementById('d-networth').textContent = (nw >= 0 ? '₹' : '−₹') + fmt(Math.abs(Math.round(nw)));
+  document.getElementById('d-networth-sub').textContent = active.length ? `Across ${active.length} accounts` : 'Add accounts in Config to start';
+  document.getElementById('d-assets').textContent = '₹' + fmt(Math.round(assetsTotal));
+  document.getElementById('d-assets-sub').textContent = active.filter(a => !a.isLiability).length + ' accounts';
+  document.getElementById('d-liab').textContent = '₹' + fmt(Math.round(liabTotal));
+  document.getElementById('d-liab-sub').textContent = active.filter(a => a.isLiability).length + ' accounts';
+
+  const acctCard = document.getElementById('d-accounts-card');
+  const acctList = document.getElementById('d-accounts-list');
+  if (active.length) {
+    const rows = (arr, header) => arr.length ? `<div class="acct-section-head">${header}</div>` + arr.map(a => {
+      const bal = accountBalance(a);
+      return `<div class="split-item" style="padding-left:14px;padding-right:14px;cursor:pointer" onclick="setLogAccountFilter(${a.id})">
+        <div><div class="split-name">${a.name}<span class="acct-chip ${a.isLiability?'liab':''}">${a.type}</span></div>
+        <div class="split-pct">tap to view transactions</div></div>
+        <div class="split-amt" style="${a.isLiability?'color:var(--red)':''}">₹${fmt(Math.round(bal))}</div>
+      </div>`;
+    }).join('') : '';
+    acctList.innerHTML = rows(active.filter(a => !a.isLiability), 'Assets') + rows(active.filter(a => a.isLiability), 'Liabilities');
+    acctCard.style.display = 'block';
+  } else {
+    acctCard.style.display = 'none';
+  }
+
+  // ── Expense breakdown (existing) ──
+  const total = expTotal;
   const saveable = es.filter(e => e.saving === 'Yes').reduce((s,e) => s+Number(e.amount),0);
   const ess = es.filter(e => e.type === 'Essentials').reduce((s,e) => s+Number(e.amount),0);
   const noness = es.filter(e => e.type === 'Non-Essentials').reduce((s,e) => s+Number(e.amount),0);
@@ -1881,7 +2484,11 @@ function renderCfg() {
   renderCfgList('cat', S.categories);
   renderCfgList('type', S.types);
   renderCfgList('freq', S.frequencies);
+  renderCfgList('src', S.incomeSources);
+  renderAccountsList();
   document.getElementById('cat-count').textContent = S.categories.length + ' items';
+  document.getElementById('src-count').textContent = S.incomeSources.length + ' items';
+  document.getElementById('acct-count').textContent = S.accounts.filter(a => !a.archived).length + ' active';
   const hasSb = !!(S.sbUrl && S.sbKey);
   document.getElementById('cfg-sb-status').textContent = hasSb ? 'Connected ✓' : 'Not connected';
   document.getElementById('cfg-sb-status').style.color = hasSb ? 'var(--green)' : 'var(--red)';
@@ -1895,8 +2502,10 @@ function renderCfgList(key, items) {
     </div>`).join('');
 }
 
+const CFG_MAP = {cat:'categories', type:'types', freq:'frequencies', src:'incomeSources'};
+
 function delCfgItem(key, i) {
-  const map = {cat:'categories',type:'types',freq:'frequencies'};
+  const map = CFG_MAP;
   const arr = S[map[key]];
   if (arr.length <= 1) return toast('Keep at least one item','err');
   if (!confirm(`Remove "${arr[i]}"?`)) return;
@@ -1913,7 +2522,7 @@ function toggleAddRow(key) {
 }
 
 function addCfgItem(key) {
-  const map = {cat:'categories',type:'types',freq:'frequencies'};
+  const map = CFG_MAP;
   const inp = document.getElementById('new-'+key);
   const val = inp.value.trim();
   if (!val) return toast('Enter a name','err');
@@ -1925,6 +2534,177 @@ function addCfgItem(key) {
   document.getElementById('add-'+key).classList.remove('show');
   renderCfg();
   toast('✓ Added: ' + val, 'ok');
+}
+
+// ══════════════════════════════════════════════════
+//  ACCOUNTS
+// ══════════════════════════════════════════════════
+const LIABILITY_TYPES = new Set(['Credit Card','Loan']);
+const MANUAL_VALUE_TYPES = new Set(['Investment','Asset','Loan']);
+
+function renderAccountsList() {
+  const list = document.getElementById('cfg-acct-list');
+  if (!list) return;
+  const active = S.accounts.filter(a => !a.archived);
+  if (!active.length) {
+    list.innerHTML = `<div style="padding:18px 16px;color:var(--ink3);font-size:13px;text-align:center">No accounts yet. Add one to start tracking balances.</div>`;
+    return;
+  }
+  const assets = active.filter(a => !a.isLiability);
+  const liabs  = active.filter(a =>  a.isLiability);
+  const row = a => {
+    const bal = accountBalance(a);
+    const isManual = MANUAL_VALUE_TYPES.has(a.type);
+    return `
+    <div class="acct-row">
+      <div class="acct-row-main">
+        <div class="acct-row-name">${a.name}<span class="acct-chip ${a.isLiability?'liab':''}">${a.type}</span></div>
+        <div class="acct-row-sub">${a.notes ? a.notes + ' · ' : ''}opened ${a.openingDate || '—'}</div>
+        ${isManual ? `
+          <div class="acct-mtm">
+            <input type="number" inputmode="decimal" id="mtm-${a.id}" placeholder="Update value (₹)">
+            <button onclick="updateAccountValue(${a.id})">Update</button>
+          </div>` : ''}
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button class="btn-del-entry" style="background:none;border:1px solid #c8e0f8;color:var(--blue)" onclick="openAccountEditor(${a.id})">✏ Edit</button>
+          <button class="btn-del-entry" onclick="archiveAccount(${a.id})">🗄 Archive</button>
+        </div>
+      </div>
+      <div class="acct-row-bal ${a.isLiability?'liab':''}">₹${fmt(Math.round(bal))}</div>
+    </div>`;
+  };
+  let html = '';
+  if (assets.length) html += `<div class="acct-section-head">Assets</div>` + assets.map(row).join('');
+  if (liabs.length)  html += `<div class="acct-section-head">Liabilities</div>` + liabs.map(row).join('');
+  list.innerHTML = html;
+}
+
+function openAccountEditor(id) {
+  const ed = document.getElementById('acct-editor');
+  ed.classList.add('show');
+  const a = id != null ? S.accounts.find(x => x.id === id) : null;
+  document.getElementById('acct-edit-id').value = a ? a.id : '';
+  document.getElementById('acct-name').value         = a ? a.name : '';
+  document.getElementById('acct-type').value         = a ? a.type : 'Bank';
+  document.getElementById('acct-opening').value      = a ? a.openingBalance : '';
+  document.getElementById('acct-opening-date').value = a ? (a.openingDate || '') : new Date().toISOString().split('T')[0];
+  document.getElementById('acct-current').value      = a && a.currentValue != null ? a.currentValue : '';
+  document.getElementById('acct-notes').value        = a ? (a.notes || '') : '';
+  onAccountTypeChange();
+}
+
+function closeAccountEditor() {
+  document.getElementById('acct-editor').classList.remove('show');
+}
+
+function onAccountTypeChange() {
+  const t = document.getElementById('acct-type').value;
+  document.getElementById('acct-cv-row').style.display = MANUAL_VALUE_TYPES.has(t) ? 'flex' : 'none';
+}
+
+async function saveAccount() {
+  const name = document.getElementById('acct-name').value.trim();
+  const type = document.getElementById('acct-type').value;
+  if (!name) return toast('Enter an account name','err');
+  const opening = parseFloat(document.getElementById('acct-opening').value || '0') || 0;
+  const openingDate = document.getElementById('acct-opening-date').value || null;
+  const currentRaw = document.getElementById('acct-current').value;
+  const currentValue = MANUAL_VALUE_TYPES.has(type) && currentRaw !== '' ? parseFloat(currentRaw) : null;
+  const notes = document.getElementById('acct-notes').value.trim();
+  const isLiability = LIABILITY_TYPES.has(type);
+  const editId = document.getElementById('acct-edit-id').value;
+
+  let acct;
+  if (editId) {
+    const idx = S.accounts.findIndex(a => a.id === Number(editId));
+    if (idx === -1) return;
+    acct = {...S.accounts[idx], name, type, openingBalance: opening, openingDate, currentValue, isLiability, notes};
+    S.accounts[idx] = acct;
+  } else {
+    acct = {
+      id: Date.now(), name, type,
+      openingBalance: opening, openingDate, currentValue, isLiability,
+      currency: 'INR', notes, archived: false
+    };
+    S.accounts.unshift(acct);
+  }
+  saveLocal();
+  closeAccountEditor();
+  renderCfg();
+  buildSelects();
+
+  // Push to Supabase
+  if (S.sbUrl && S.sbKey) {
+    const body = {
+      id: acct.id, name: acct.name, type: acct.type,
+      opening_balance: acct.openingBalance,
+      opening_date: acct.openingDate || null,
+      current_value: acct.currentValue,
+      is_liability: acct.isLiability,
+      currency: acct.currency,
+      notes: acct.notes || null,
+      archived: acct.archived
+    };
+    try {
+      if (editId) {
+        await fetch(`${S.sbUrl}/rest/v1/accounts?id=eq.${acct.id}`, {
+          method: 'PATCH',
+          headers: { apikey: S.sbKey, Authorization: `Bearer ${S.sbKey}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+          body: JSON.stringify(body)
+        });
+      } else {
+        await fetch(`${S.sbUrl}/rest/v1/accounts`, {
+          method: 'POST',
+          headers: { apikey: S.sbKey, Authorization: `Bearer ${S.sbKey}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+          body: JSON.stringify(body)
+        });
+      }
+    } catch(e) {}
+  }
+  toast(editId ? '✓ Account updated' : '✓ Account added', 'ok');
+}
+
+async function archiveAccount(id) {
+  const a = S.accounts.find(x => x.id === id);
+  if (!a) return;
+  if (!confirm(`Archive "${a.name}"?\n\nHistory stays intact; the account just stops appearing in pickers and net worth.`)) return;
+  a.archived = true;
+  saveLocal();
+  renderCfg();
+  buildSelects();
+  if (S.sbUrl && S.sbKey) {
+    try {
+      await fetch(`${S.sbUrl}/rest/v1/accounts?id=eq.${id}`, {
+        method: 'PATCH',
+        headers: { apikey: S.sbKey, Authorization: `Bearer ${S.sbKey}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify({ archived: true })
+      });
+    } catch(e) {}
+  }
+  toast('Account archived', 'ok');
+}
+
+async function updateAccountValue(id) {
+  const inp = document.getElementById('mtm-' + id);
+  if (!inp) return;
+  const v = parseFloat(inp.value);
+  if (isNaN(v)) return toast('Enter a number', 'err');
+  const a = S.accounts.find(x => x.id === id);
+  if (!a) return;
+  a.currentValue = v;
+  saveLocal();
+  inp.value = '';
+  renderCfg();
+  if (S.sbUrl && S.sbKey) {
+    try {
+      await fetch(`${S.sbUrl}/rest/v1/accounts?id=eq.${id}`, {
+        method: 'PATCH',
+        headers: { apikey: S.sbKey, Authorization: `Bearer ${S.sbKey}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify({ current_value: v })
+      });
+    } catch(e) {}
+  }
+  toast('✓ Value updated', 'ok');
 }
 
 // ══════════════════════════════════════════════════
@@ -1961,16 +2741,48 @@ function exportBackup() {
   const payload = {
     app: 'D & E Finance',
     exportedAt: new Date().toISOString(),
-    version: '1',
+    version: '2',
     config: {
       categories: S.categories,
       types: S.types,
       frequencies: S.frequencies,
+      incomeSources: S.incomeSources,
     },
     entries: S.entries,
+    income: S.income,
+    accounts: S.accounts,
   };
   dl(new Blob([JSON.stringify(payload, null, 2)], {type: 'application/json'}), `de-finance-backup-${today}.json`);
   toast('Backup downloaded', 'ok');
+}
+
+function exportIncomeCSV() {
+  const headers = ['Date','Amount (INR)','Source','Received By','Account','Description','Added By','Month'];
+  const acctName = id => (S.accounts.find(a => a.id === id) || {}).name || '';
+  const rows = S.income.map(i => [
+    i.date, i.amount, i.source, i.receivedBy, acctName(i.account),
+    '"' + (i.desc || '').replace(/"/g,'""') + '"',
+    i.addedBy, i.month
+  ].join(','));
+  const csv = '﻿' + [headers.join(','), ...rows].join('\n');
+  dl(new Blob([csv], {type:'text/csv'}), 'DE_Finance_Income.csv');
+  toast('Income CSV downloaded', 'ok');
+}
+
+function exportAccountsCSV() {
+  const headers = ['Name','Type','Is Liability','Opening Balance','Opening Date','Current Value','Computed Balance','Currency','Notes','Archived'];
+  const rows = S.accounts.map(a => [
+    '"' + a.name.replace(/"/g,'""') + '"',
+    a.type, a.isLiability ? 'Yes' : 'No',
+    a.openingBalance, a.openingDate || '',
+    a.currentValue ?? '', Math.round(accountBalance(a)),
+    a.currency || 'INR',
+    '"' + (a.notes || '').replace(/"/g,'""') + '"',
+    a.archived ? 'Yes' : 'No'
+  ].join(','));
+  const csv = '﻿' + [headers.join(','), ...rows].join('\n');
+  dl(new Blob([csv], {type:'text/csv'}), 'DE_Finance_Accounts.csv');
+  toast('Accounts CSV downloaded', 'ok');
 }
 
 async function importBackup(input) {
@@ -1988,55 +2800,87 @@ async function importBackup(input) {
     toast('Backup missing entries', '');
     return;
   }
-  const count = payload.entries.length;
-  if (!confirm(`Restore ${count} entries from backup dated ${(payload.exportedAt||'').slice(0,10)}?\n\nThis will REPLACE all current data.`)) return;
+  const incomeArr   = Array.isArray(payload.income)   ? payload.income   : [];
+  const accountsArr = Array.isArray(payload.accounts) ? payload.accounts : [];
+  const eCount = payload.entries.length;
+  const iCount = incomeArr.length;
+  const aCount = accountsArr.length;
+
+  const msg = `Restore from backup dated ${(payload.exportedAt||'').slice(0,10)}?\n\n` +
+              `  • ${eCount} expenses\n` +
+              `  • ${iCount} income\n` +
+              `  • ${aCount} accounts\n\n` +
+              `This will REPLACE all current data.`;
+  if (!confirm(msg)) return;
 
   toast('Restoring…', '');
 
-  // Clear Supabase
-  if (S.sbUrl && S.sbKey) {
-    await fetch(`${S.sbUrl}/rest/v1/expenses?id=gt.0`, {
-      method: 'DELETE',
-      headers: { apikey: S.sbKey, Authorization: `Bearer ${S.sbKey}`, 'Content-Type': 'application/json' }
-    });
-  }
+  const sbDel = path => (S.sbUrl && S.sbKey)
+    ? fetch(`${S.sbUrl}/rest/v1/${path}?id=gt.0`, {
+        method: 'DELETE',
+        headers: { apikey: S.sbKey, Authorization: `Bearer ${S.sbKey}`, 'Content-Type': 'application/json' }
+      }).catch(() => null)
+    : Promise.resolve(null);
 
-  // Re-insert all entries in batches of 50
+  const sbInsert = (path, rows) => (S.sbUrl && S.sbKey && rows.length)
+    ? fetch(`${S.sbUrl}/rest/v1/${path}`, {
+        method: 'POST',
+        headers: { apikey: S.sbKey, Authorization: `Bearer ${S.sbKey}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify(rows),
+      }).catch(() => null)
+    : Promise.resolve(null);
+
+  await Promise.all([sbDel('expenses'), sbDel('income'), sbDel('accounts')]);
+
   const batch = 50;
+  // Expenses
   for (let i = 0; i < payload.entries.length; i += batch) {
-    const chunk = payload.entries.slice(i, i + batch).map(e => ({
+    await sbInsert('expenses', payload.entries.slice(i, i + batch).map(e => ({
       id: e.id, date: e.date, amount: e.amount,
       category: e.category, type: e.type, freq: e.freq,
       for_whom: e.forWhom, paid_by: e.paidBy,
       saving: e.saving, description: e.desc,
       month: e.month, added_by: e.addedBy,
-    }));
-    if (S.sbUrl && S.sbKey) {
-      await fetch(`${S.sbUrl}/rest/v1/expenses`, {
-        method: 'POST',
-        headers: { apikey: S.sbKey, Authorization: `Bearer ${S.sbKey}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
-        body: JSON.stringify(chunk),
-      });
-    }
+      account: e.account ?? null
+    })));
+  }
+  // Income
+  for (let i = 0; i < incomeArr.length; i += batch) {
+    await sbInsert('income', incomeArr.slice(i, i + batch).map(x => ({
+      id: x.id, date: x.date, amount: x.amount,
+      source: x.source, received_by: x.receivedBy,
+      account: x.account ?? null, description: x.desc,
+      month: x.month, added_by: x.addedBy
+    })));
+  }
+  // Accounts
+  for (let i = 0; i < accountsArr.length; i += batch) {
+    await sbInsert('accounts', accountsArr.slice(i, i + batch).map(a => ({
+      id: a.id, name: a.name, type: a.type,
+      opening_balance: a.openingBalance ?? 0,
+      opening_date: a.openingDate || null,
+      current_value: a.currentValue ?? null,
+      is_liability: !!a.isLiability,
+      currency: a.currency || 'INR',
+      notes: a.notes || null,
+      archived: !!a.archived
+    })));
   }
 
-  // Restore config if present
+  // Restore config
   if (payload.config) {
-    S.categories  = payload.config.categories  || S.categories;
-    S.types       = payload.config.types       || S.types;
-    S.frequencies = payload.config.frequencies || S.frequencies;
-    const saved   = JSON.parse(localStorage.getItem(LS_KEY) || '{}');
-    saved.categories  = S.categories;
-    saved.types       = S.types;
-    saved.frequencies = S.frequencies;
-    localStorage.setItem(LS_KEY, JSON.stringify(saved));
+    S.categories    = payload.config.categories    || S.categories;
+    S.types         = payload.config.types         || S.types;
+    S.frequencies   = payload.config.frequencies   || S.frequencies;
+    S.incomeSources = payload.config.incomeSources || S.incomeSources;
   }
-
-  // Reload from Supabase
-  S.entries = payload.entries;
+  S.entries  = payload.entries;
+  S.income   = incomeArr;
+  S.accounts = accountsArr;
   saveLocal();
+  buildSelects();
   renderLog();
-  toast(`✓ Restored ${count} entries`, 'ok');
+  toast(`✓ Restored ${eCount} expenses, ${iCount} income, ${aCount} accounts`, 'ok');
 }
 
 function dl(blob, name) {
