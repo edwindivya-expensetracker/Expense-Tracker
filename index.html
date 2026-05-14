@@ -1513,6 +1513,12 @@ const DEFAULTS = {
 //   CREATE INDEX IF NOT EXISTS idx_income_date   ON income(date DESC);
 //   CREATE INDEX IF NOT EXISTS idx_income_month  ON income(month);
 //   CREATE INDEX IF NOT EXISTS idx_expenses_acct ON expenses(account);
+//
+//   -- Required from Oct 30, 2026 onwards: Supabase no longer auto-grants the
+//   -- 'anon' role access to new tables. Including these lines makes the
+//   -- migration safe to run before or after that cutoff (no-op if already granted).
+//   GRANT SELECT, INSERT, UPDATE, DELETE ON public.accounts TO anon, authenticated, service_role;
+//   GRANT SELECT, INSERT, UPDATE, DELETE ON public.income   TO anon, authenticated, service_role;
 
 const FAMILY_PIN = "1234"; // ← Change this to your preferred PIN
 const LS_KEY = 'de_finance_v2';
