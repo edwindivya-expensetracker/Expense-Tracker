@@ -2811,6 +2811,8 @@ const MANUAL_VALUE_TYPES = new Set(['Investment','Asset','Loan']);
 function renderAccountsList() {
   const list = document.getElementById('cfg-acct-list');
   if (!list) return;
+  // Rescue the editor from inside the list before we wipe it
+  if (document.getElementById('acct-editor')?.parentElement === list) restoreEditorHome();
   const active = S.accounts.filter(a => !a.archived);
   if (!active.length) {
     list.innerHTML = `<div style="padding:18px 16px;color:var(--ink3);font-size:13px;text-align:center">No accounts yet. Add one to start tracking balances.</div>`;
@@ -2823,7 +2825,7 @@ function renderAccountsList() {
     const isManual = MANUAL_VALUE_TYPES.has(a.type);
     const ownerClass = 'owner-' + (a.owner || 'Joint').toLowerCase();
     return `
-    <div class="acct-row">
+    <div class="acct-row" id="acct-row-${a.id}" data-acct-id="${a.id}">
       <div class="acct-row-main">
         <div class="acct-row-name">${a.name}<span class="acct-chip ${a.isLiability?'liab':''}">${a.type}</span><span class="acct-chip ${ownerClass}">${a.owner || 'Joint'}</span></div>
         <div class="acct-row-sub">${a.notes ? a.notes + ' · ' : ''}opened ${a.openingDate || '—'}</div>
@@ -2859,10 +2861,30 @@ function openAccountEditor(id) {
   document.getElementById('acct-current').value      = a && a.currentValue != null ? a.currentValue : '';
   document.getElementById('acct-notes').value        = a ? (a.notes || '') : '';
   onAccountTypeChange();
+
+  // Anchor the editor right under the row being edited (or back to its
+  // home spot inside the cfg-card when adding a new account).
+  if (a) {
+    const row = document.getElementById('acct-row-' + a.id);
+    if (row) row.insertAdjacentElement('afterend', ed);
+  } else {
+    restoreEditorHome();
+  }
+  ed.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function restoreEditorHome() {
+  // The editor was authored as the last child of the Accounts cfg-card;
+  // moving it there keeps it out of cfg-acct-list so list re-renders don't blow it away.
+  const ed = document.getElementById('acct-editor');
+  const card = document.getElementById('cfg-acct-list')?.parentElement;
+  if (card && ed.parentElement !== card) card.appendChild(ed);
 }
 
 function closeAccountEditor() {
-  document.getElementById('acct-editor').classList.remove('show');
+  const ed = document.getElementById('acct-editor');
+  ed.classList.remove('show');
+  restoreEditorHome();
 }
 
 function onAccountTypeChange() {
