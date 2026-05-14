@@ -540,6 +540,7 @@ select.finput option { background: white; color: var(--ink); }
 .echip.paid { font-weight: 600; }
 .echip.saveable { background: var(--green-bg); border-color: #a0d4b8; color: var(--green); }
 .echip.income { background: var(--green-bg); border-color: #a0d4b8; color: var(--green); font-weight: 600; }
+.echip.transfer { background: #eef0fa; border-color: #c9d0ee; color: #5b6ed8; font-weight: 600; }
 .echip.acct { background: #eef2f7; border-color: #c8d3e0; color: var(--ink2); }
 
 /* ── Accounts (Config) ── */
@@ -587,6 +588,10 @@ select.finput option { background: white; color: var(--ink); }
   margin-left: 6px; vertical-align: middle;
 }
 .acct-chip.liab { background: #fff0f0; border-color: #ffb3b3; color: var(--red); }
+.acct-chip.owner-edwin { background: var(--blue-bg);  border-color: #b0cce8; color: var(--blue); }
+.acct-chip.owner-divya { background: var(--pink-bg);  border-color: #e0b0c8; color: var(--pink); }
+.acct-chip.owner-aj    { background: var(--teal-bg);  border-color: #a0d4cc; color: var(--teal); }
+.acct-chip.owner-joint { background: var(--amber-bg); border-color: var(--amber-border); color: var(--amber); }
 .btn-del-entry {
   margin-top: 10px;
   background: none;
@@ -1036,7 +1041,7 @@ select.modal-input option { background: white; }
       </div>
       <div class="frow">
         <span class="flabel">Account</span>
-        <select class="finput" id="f-account"></select>
+        <select class="finput" id="f-account" onchange="onPickAccount(this.value, 'paid')"></select>
       </div>
       <div class="frow">
         <span class="flabel">Description</span>
@@ -1072,7 +1077,7 @@ select.modal-input option { background: white; }
       </div>
       <div class="frow">
         <span class="flabel">Account</span>
-        <select class="finput" id="i-account"></select>
+        <select class="finput" id="i-account" onchange="onPickAccount(this.value, 'received')"></select>
       </div>
     </div>
 
@@ -1102,12 +1107,54 @@ select.modal-input option { background: white; }
     <button class="btn-submit" style="background:var(--green)" onclick="submitIncome()">Save Income</button>
   </div>
 
+  <!-- TRANSFER PAGE -->
+  <div id="page-transfer" class="page">
+    <div class="sec-label">Amount</div>
+    <div class="fcard">
+      <div class="frow">
+        <span class="amt-sym">₹</span>
+        <input class="finput" id="t-amount" type="number" inputmode="decimal" placeholder="0.00" style="font-size:30px;font-weight:300">
+      </div>
+    </div>
+
+    <div class="sec-label">From → To</div>
+    <div class="fcard">
+      <div class="frow">
+        <span class="flabel">From Account</span>
+        <select class="finput" id="t-from"></select>
+      </div>
+      <div class="frow">
+        <span class="flabel">To Account</span>
+        <select class="finput" id="t-to"></select>
+      </div>
+    </div>
+
+    <div class="sec-label">Details</div>
+    <div class="fcard">
+      <div class="frow">
+        <span class="flabel">Date</span>
+        <input class="finput" id="t-date" type="date">
+      </div>
+      <div class="frow">
+        <span class="flabel">Description</span>
+        <input class="finput" id="t-desc" type="text" placeholder="e.g. ICICI card bill payment">
+      </div>
+    </div>
+
+    <div style="padding:0 4px 12px;font-size:12px;color:var(--ink3);line-height:1.5">
+      Transfers move money between your own accounts (e.g. paying a credit-card bill from a bank account). They don't count as Income or Expense in the cash-flow view.
+    </div>
+
+    <button class="btn-submit" style="background:#5b6ed8" onclick="submitTransfer()">Save Transfer</button>
+  </div>
+
   <!-- LOG PAGE -->
   <div id="page-log" class="page">
     <div class="log-bar">
       <div class="log-chip active" data-k="All" onclick="setLogKind(this)">All</div>
       <div class="log-chip" data-k="Expense" onclick="setLogKind(this)">Expense</div>
       <div class="log-chip" data-k="Income" onclick="setLogKind(this)">Income</div>
+      <div class="log-chip" data-k="Transfer" onclick="setLogKind(this)">Transfer</div>
     </div>
     <div class="log-bar">
       <div class="log-chip active" data-f="All" onclick="setLogFilter(this)">All</div>
@@ -1183,6 +1230,8 @@ select.modal-input option { background: white; }
         <div class="stat-sub" id="d-liab-sub" style="color:#c0392b">0 accounts</div>
       </div>
     </div>
+    <div class="sec-label" id="d-owner-split-label" style="display:none">Net Worth by Owner</div>
+    <div class="fcard" id="d-owner-split" style="padding:4px 16px;display:none"></div>
     <div class="fcard" id="d-accounts-card" style="padding:4px 0;display:none">
       <div id="d-accounts-list"></div>
     </div>
@@ -1331,6 +1380,15 @@ select.modal-input option { background: white; }
           </select>
         </div>
         <div class="frow">
+          <span class="flabel">Owner</span>
+          <select id="acct-owner">
+            <option value="Joint">Joint</option>
+            <option value="Edwin">Edwin</option>
+            <option value="Divya">Divya</option>
+            <option value="AJ">AJ</option>
+          </select>
+        </div>
+        <div class="frow">
           <span class="flabel">Opening Balance (₹)</span>
           <input id="acct-opening" type="number" inputmode="decimal" placeholder="0">
         </div>
@@ -1459,6 +1517,11 @@ select.modal-input option { background: white; }
       <div class="nav-icon" style="color:var(--green)">＋₹</div>
       <div class="nav-label">INCOME</div>
     </div>
+    <div class="nav-item" onclick="goPage('transfer',this)">
+      <div class="nav-active-bar"></div>
+      <div class="nav-icon" style="color:#5b6ed8">⇄</div>
+      <div class="nav-label">MOVE</div>
+    </div>
     <div class="nav-item" onclick="goPage('log',this)">
       <div class="nav-active-bar"></div>
       <div class="nav-icon">📋</div>
@@ -1504,21 +1567,30 @@ const DEFAULTS = {
 //     archived BOOLEAN NOT NULL DEFAULT FALSE,
 //     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 //   );
+//   ALTER TABLE accounts ADD COLUMN IF NOT EXISTS owner TEXT;
 //   CREATE TABLE IF NOT EXISTS income (
 //     id BIGINT PRIMARY KEY, date DATE NOT NULL, amount NUMERIC(14,2) NOT NULL,
 //     source TEXT NOT NULL, received_by TEXT, account BIGINT NULL,
 //     description TEXT, month TEXT, added_by TEXT,
 //     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 //   );
-//   CREATE INDEX IF NOT EXISTS idx_income_date   ON income(date DESC);
-//   CREATE INDEX IF NOT EXISTS idx_income_month  ON income(month);
-//   CREATE INDEX IF NOT EXISTS idx_expenses_acct ON expenses(account);
+//   CREATE TABLE IF NOT EXISTS transfers (
+//     id BIGINT PRIMARY KEY, date DATE NOT NULL, amount NUMERIC(14,2) NOT NULL,
+//     from_account BIGINT NOT NULL, to_account BIGINT NOT NULL,
+//     description TEXT, month TEXT, added_by TEXT,
+//     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+//   );
+//   CREATE INDEX IF NOT EXISTS idx_income_date    ON income(date DESC);
+//   CREATE INDEX IF NOT EXISTS idx_income_month   ON income(month);
+//   CREATE INDEX IF NOT EXISTS idx_expenses_acct  ON expenses(account);
+//   CREATE INDEX IF NOT EXISTS idx_transfers_date ON transfers(date DESC);
 //
 //   -- Required from Oct 30, 2026 onwards: Supabase no longer auto-grants the
 //   -- 'anon' role access to new tables. Including these lines makes the
 //   -- migration safe to run before or after that cutoff (no-op if already granted).
-//   GRANT SELECT, INSERT, UPDATE, DELETE ON public.accounts TO anon, authenticated, service_role;
-//   GRANT SELECT, INSERT, UPDATE, DELETE ON public.income   TO anon, authenticated, service_role;
+//   GRANT SELECT, INSERT, UPDATE, DELETE ON public.accounts  TO anon, authenticated, service_role;
+//   GRANT SELECT, INSERT, UPDATE, DELETE ON public.income    TO anon, authenticated, service_role;
+//   GRANT SELECT, INSERT, UPDATE, DELETE ON public.transfers TO anon, authenticated, service_role;
 
 const FAMILY_PIN = "1234"; // ← Change this to your preferred PIN
 const LS_KEY = 'de_finance_v2';
@@ -1533,12 +1605,14 @@ let S = {
   entries: [],
   income: [],
   accounts: [],
+  transfers: [],
   dashPeriod: 'month',
   logFilter: 'All',
   logCategoryFilter: 'All',
   logSearch: '',
   logKind: 'All',
-  logAccountFilter: null
+  logAccountFilter: null,
+  dashOwner: 'All'
 };
 let currentUser = '';
 let pinBuffer = '';
@@ -1559,6 +1633,7 @@ function loadLocal() {
   if (!Array.isArray(S.incomeSources) || !S.incomeSources.length) S.incomeSources = [...DEFAULTS.incomeSources];
   if (!Array.isArray(S.income)) S.income = [];
   if (!Array.isArray(S.accounts)) S.accounts = [];
+  if (!Array.isArray(S.transfers)) S.transfers = [];
 }
 
 function saveLocal() {
@@ -1591,13 +1666,13 @@ async function sbFetch(path, opts={}) {
 
 async function syncNow() {
   setSyncState('syncing');
-  const [rows, acctRows, incRows] = await Promise.all([
+  const [rows, acctRows, incRows, xferRows] = await Promise.all([
     sbFetch('expenses?select=*&order=date.desc'),
     sbFetch('accounts?select=*&order=created_at.asc'),
-    sbFetch('income?select=*&order=date.desc')
+    sbFetch('income?select=*&order=date.desc'),
+    sbFetch('transfers?select=*&order=date.desc')
   ]);
   if (rows && Array.isArray(rows)) {
-    // Merge: remote is source of truth, merge with any local-only entries
     const remoteIds = new Set(rows.map(r => r.id));
     const localOnly = S.entries.filter(e => !remoteIds.has(e.id));
     S.entries = [...rows.map(r => ({
@@ -1620,7 +1695,8 @@ async function syncNow() {
       isLiability: !!r.is_liability,
       currency: r.currency || 'INR',
       notes: r.notes || '',
-      archived: !!r.archived
+      archived: !!r.archived,
+      owner: r.owner || 'Joint'
     })), ...localOnly];
   }
   if (incRows && Array.isArray(incRows)) {
@@ -1633,10 +1709,20 @@ async function syncNow() {
       desc: r.description, month: r.month, addedBy: r.added_by
     })), ...localOnly];
   }
+  if (xferRows && Array.isArray(xferRows)) {
+    const remoteIds = new Set(xferRows.map(r => r.id));
+    const localOnly = S.transfers.filter(t => !remoteIds.has(t.id));
+    S.transfers = [...xferRows.map(r => ({
+      id: r.id, date: r.date, amount: Number(r.amount),
+      fromAccount: r.from_account != null ? Number(r.from_account) : null,
+      toAccount:   r.to_account   != null ? Number(r.to_account)   : null,
+      desc: r.description, month: r.month, addedBy: r.added_by
+    })), ...localOnly];
+  }
   if (rows && Array.isArray(rows)) {
     saveLocal();
     setSyncState('online');
-    toast('✓ Synced — ' + S.entries.length + ' expenses, ' + S.income.length + ' income', 'ok');
+    toast('✓ Synced — ' + S.entries.length + ' expenses, ' + S.income.length + ' income, ' + S.transfers.length + ' transfers', 'ok');
     if (document.getElementById('page-log').classList.contains('active')) renderLog();
     if (document.getElementById('page-dash').classList.contains('active')) renderDash();
     if (document.getElementById('page-cfg').classList.contains('active')) renderCfg();
@@ -1783,6 +1869,7 @@ function goPage(name, navEl) {
   if (name === 'dash') renderDash();
   if (name === 'cfg') renderCfg();
   if (name === 'income') renderIncomeForm();
+  if (name === 'transfer') renderTransferForm();
 }
 
 // ══════════════════════════════════════════════════
@@ -1800,9 +1887,17 @@ function buildSelects() {
 
   const acctOpts = '<option value="">— None —</option>' +
     S.accounts.filter(a => !a.archived)
-      .map(a => `<option value="${a.id}">${a.name}</option>`).join('');
+      .map(a => `<option value="${a.id}">${a.name} (${a.owner || 'Joint'})</option>`).join('');
   ['f-account','i-account','edit-account'].forEach(id => {
     const el = document.getElementById(id); if (el) el.innerHTML = acctOpts;
+  });
+
+  // Transfer selects need their own placeholder (— Select —) since both are required
+  const xferOpts = '<option value="">— Select —</option>' +
+    S.accounts.filter(a => !a.archived)
+      .map(a => `<option value="${a.id}">${a.name} (${a.owner || 'Joint'})</option>`).join('');
+  ['t-from','t-to','edit-from','edit-to'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.innerHTML = xferOpts;
   });
 
   const srcSel = document.getElementById('i-source');
@@ -1814,6 +1909,11 @@ function renderIncomeForm() {
   document.getElementById('i-date').value = new Date().toISOString().split('T')[0];
 }
 
+function renderTransferForm() {
+  buildSelects();
+  document.getElementById('t-date').value = new Date().toISOString().split('T')[0];
+}
+
 function pickPill(el) {
   const g = el.dataset.g;
   document.querySelectorAll(`.pill[data-g="${g}"]`).forEach(p => p.classList.remove('active'));
@@ -1822,6 +1922,20 @@ function pickPill(el) {
 
 function getPill(g) {
   return document.querySelector(`.pill.active[data-g="${g}"]`)?.dataset.v || '';
+}
+
+// When an account is picked on Add Expense / Income, auto-default the
+// paid-by / received-by pill to the account's owner (if Edwin or Divya).
+// "Joint" and "AJ"-owned accounts don't auto-default — user picks manually.
+function onPickAccount(acctIdRaw, pillGroup) {
+  if (!acctIdRaw) return;
+  const acct = S.accounts.find(a => a.id === Number(acctIdRaw));
+  if (!acct) return;
+  const owner = acct.owner || 'Joint';
+  if (owner !== 'Edwin' && owner !== 'Divya') return;
+  document.querySelectorAll(`.pill[data-g="${pillGroup}"]`).forEach(p => {
+    p.classList.toggle('active', p.dataset.v === owner);
+  });
 }
 
 function setDefaultDate() {
@@ -1961,6 +2075,73 @@ async function deleteIncome(id) {
     } catch(e) {}
   }
   toast('Income deleted', 'ok');
+  renderLog();
+}
+
+// ── Transfers ────────────────────────────────────────────────────────
+async function submitTransfer() {
+  const amount = parseFloat(document.getElementById('t-amount').value);
+  const fromRaw = document.getElementById('t-from').value;
+  const toRaw   = document.getElementById('t-to').value;
+  const date = document.getElementById('t-date').value;
+  const desc = document.getElementById('t-desc').value.trim();
+
+  if (!amount || amount <= 0) return toast('Enter a valid amount', 'err');
+  if (!fromRaw) return toast('Pick the source account', 'err');
+  if (!toRaw)   return toast('Pick the destination account', 'err');
+  if (fromRaw === toRaw) return toast('From and To must be different', 'err');
+  if (!date) return toast('Select a date', 'err');
+
+  const xfer = {
+    id: Date.now(),
+    date, amount,
+    fromAccount: Number(fromRaw),
+    toAccount:   Number(toRaw),
+    desc,
+    month: date.slice(0,7),
+    addedBy: currentUser
+  };
+  S.transfers.unshift(xfer);
+  saveLocal();
+
+  setSyncState('syncing');
+  const ok = await sbFetch('transfers', {
+    method: 'POST',
+    prefer: 'return=minimal',
+    body: JSON.stringify({
+      id: xfer.id, date: xfer.date, amount: xfer.amount,
+      from_account: xfer.fromAccount, to_account: xfer.toAccount,
+      description: xfer.desc, month: xfer.month, added_by: xfer.addedBy
+    })
+  });
+  if (ok) { setSyncState('online'); toast('✓ Transfer saved & synced', 'ok'); }
+  else    { setSyncState('offline'); toast('Saved locally (offline)', ''); }
+  resetTransferForm();
+}
+
+function resetTransferForm() {
+  document.getElementById('t-amount').value = '';
+  document.getElementById('t-from').value = '';
+  document.getElementById('t-to').value = '';
+  document.getElementById('t-desc').value = '';
+  document.getElementById('t-date').value = new Date().toISOString().split('T')[0];
+}
+
+async function deleteTransfer(id) {
+  if (!confirm('Delete this transfer?')) return;
+  S.transfers = S.transfers.filter(t => t.id !== id);
+  saveLocal();
+  const card = document.getElementById('xfer-' + id);
+  if (card) card.remove();
+  if (S.sbUrl && S.sbKey) {
+    try {
+      await fetch(`${S.sbUrl}/rest/v1/transfers?id=eq.${id}`, {
+        method: 'DELETE',
+        headers: { apikey: S.sbKey, Authorization: `Bearer ${S.sbKey}`, 'Content-Type': 'application/json' }
+      });
+    } catch(e) {}
+  }
+  toast('Transfer deleted', 'ok');
   renderLog();
 }
 
@@ -2230,16 +2411,26 @@ function renderLog() {
   // Build merged stream
   const acctName = id => (S.accounts.find(a => a.id === id) || {}).name || '';
   let items = [
-    ...S.entries.map(e => ({...e, _kind:'expense', _searchSrc: [e.category, e.desc, e.forWhom, e.paidBy, e.type, e.freq, e.addedBy, acctName(e.account), String(e.amount), e.date]})),
-    ...S.income .map(i => ({...i, _kind:'income', _searchSrc: [i.source, i.desc, i.receivedBy, i.addedBy, acctName(i.account), String(i.amount), i.date]}))
+    ...S.entries  .map(e => ({...e, _kind:'expense',  _searchSrc: [e.category, e.desc, e.forWhom, e.paidBy, e.type, e.freq, e.addedBy, acctName(e.account), String(e.amount), e.date]})),
+    ...S.income   .map(i => ({...i, _kind:'income',   _searchSrc: [i.source, i.desc, i.receivedBy, i.addedBy, acctName(i.account), String(i.amount), i.date]})),
+    ...S.transfers.map(t => ({...t, _kind:'transfer', _searchSrc: [t.desc, t.addedBy, acctName(t.fromAccount), acctName(t.toAccount), String(t.amount), t.date]}))
   ];
 
-  if (S.logKind === 'Expense') items = items.filter(x => x._kind === 'expense');
-  if (S.logKind === 'Income')  items = items.filter(x => x._kind === 'income');
-  if (S.logAccountFilter != null) items = items.filter(x => x.account === S.logAccountFilter);
+  if (S.logKind === 'Expense')  items = items.filter(x => x._kind === 'expense');
+  if (S.logKind === 'Income')   items = items.filter(x => x._kind === 'income');
+  if (S.logKind === 'Transfer') items = items.filter(x => x._kind === 'transfer');
+  if (S.logAccountFilter != null) {
+    items = items.filter(x => x._kind === 'transfer'
+      ? (x.fromAccount === S.logAccountFilter || x.toAccount === S.logAccountFilter)
+      : x.account === S.logAccountFilter);
+  }
 
   if (S.logFilter !== 'All') {
-    items = items.filter(x => x._kind === 'income' ? x.receivedBy === S.logFilter : x.forWhom === S.logFilter);
+    items = items.filter(x => {
+      if (x._kind === 'income')   return x.receivedBy === S.logFilter;
+      if (x._kind === 'expense')  return x.forWhom    === S.logFilter;
+      return true; // transfers don't have a person field
+    });
   }
   if (S.logCategoryFilter !== 'All') {
     items = items.filter(x => x._kind === 'expense' && x.category === S.logCategoryFilter);
@@ -2251,15 +2442,18 @@ function renderLog() {
 
   items.sort((a,b) => (b.date||'').localeCompare(a.date||''));
 
-  // Totals bar
+  // Totals bar (transfers are excluded from cash-flow totals by design)
   if (items.length) {
     const expTotal = items.filter(x => x._kind === 'expense').reduce((s,x) => s + Number(x.amount), 0);
     const incTotal = items.filter(x => x._kind === 'income') .reduce((s,x) => s + Number(x.amount), 0);
+    const xfrTotal = items.filter(x => x._kind === 'transfer').reduce((s,x) => s + Number(x.amount), 0);
     let inner = '';
     if (S.logKind === 'Income') {
       inner = `<span class="ltb-label">${items.length} income</span><span class="ltb-amt" style="color:var(--green)">+₹${incTotal.toLocaleString('en-IN')}</span>`;
     } else if (S.logKind === 'Expense') {
       inner = `<span class="ltb-label">${items.length} expense${items.length !== 1 ? 's' : ''}</span><span class="ltb-amt">₹${expTotal.toLocaleString('en-IN')}</span>`;
+    } else if (S.logKind === 'Transfer') {
+      inner = `<span class="ltb-label">${items.length} transfer${items.length !== 1 ? 's' : ''}</span><span class="ltb-amt" style="color:#5b6ed8">₹${xfrTotal.toLocaleString('en-IN')}</span>`;
     } else {
       const net = incTotal - expTotal;
       const netColor = net >= 0 ? 'var(--green)' : 'var(--red)';
@@ -2277,7 +2471,11 @@ function renderLog() {
   }
 
   const q = S.logSearch;
-  list.innerHTML = items.map(x => x._kind === 'income' ? renderIncomeCard(x, q) : renderExpenseCard(x, q)).join('');
+  list.innerHTML = items.map(x => {
+    if (x._kind === 'income')   return renderIncomeCard(x, q);
+    if (x._kind === 'transfer') return renderTransferCard(x, q);
+    return renderExpenseCard(x, q);
+  }).join('');
 }
 
 function renderExpenseCard(e, q) {
@@ -2334,6 +2532,29 @@ function renderIncomeCard(i, q) {
     </div>`;
 }
 
+function renderTransferCard(t, q) {
+  const fromName = (S.accounts.find(a => a.id === t.fromAccount) || {}).name || '(unknown)';
+  const toName   = (S.accounts.find(a => a.id === t.toAccount)   || {}).name || '(unknown)';
+  return `
+    <div class="entry-card" id="xfer-${t.id}">
+      <div class="entry-left">
+        <div class="entry-cat">${hl(fromName, q)} → ${hl(toName, q)}</div>
+        ${t.desc ? `<div class="entry-desc">${hl(t.desc, q)}</div>` : ''}
+        <div class="entry-chips">
+          <div class="echip transfer">⇄ Transfer</div>
+        </div>
+        ${t.addedBy ? `<div class="entry-by" style="margin-top:6px;font-size:11px;color:var(--ink3)">Added by ${hl(t.addedBy, q)}</div>` : ''}
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn-del-entry" onclick="deleteTransfer(${t.id})">🗑 Delete</button>
+        </div>
+      </div>
+      <div class="entry-right">
+        <div class="entry-amount" style="color:#5b6ed8">₹${Number(t.amount).toLocaleString('en-IN')}</div>
+        <div class="entry-date">${fmtDate(t.date)}</div>
+      </div>
+    </div>`;
+}
+
 // ══════════════════════════════════════════════════
 //  DASHBOARD
 // ══════════════════════════════════════════════════
@@ -2357,21 +2578,32 @@ function filteredEntries() { return S.entries.filter(e => inPeriod(e.date)); }
 function filteredIncome()  { return S.income .filter(i => inPeriod(i.date)); }
 
 // ── Balances & net worth ─────────────────────────────────────────────
+// Returned balance convention:
+//   - Asset-type accounts (Bank, Cash, Investment, Asset): positive = funds you own
+//   - Liability-type accounts (Credit Card, Loan): positive = magnitude you owe
+// netWorth flips liability sign so each contributes correctly.
 function accountBalance(acct) {
-  // Manual valuation: Investment / Asset / Loan use current_value (mark-to-market)
   if (acct.type === 'Investment' || acct.type === 'Asset' || acct.type === 'Loan') {
     return Number(acct.currentValue ?? acct.openingBalance ?? 0);
   }
-  // Computed: Bank / Cash / Credit Card
-  const inflow  = S.income .filter(i => i.account === acct.id).reduce((s,i) => s + Number(i.amount), 0);
-  const outflow = S.entries.filter(e => e.account === acct.id).reduce((s,e) => s + Number(e.amount), 0);
-  return Number(acct.openingBalance || 0) + inflow - outflow;
+  const inflow  = S.income   .filter(i => i.account     === acct.id).reduce((s,i) => s + Number(i.amount), 0);
+  const outflow = S.entries  .filter(e => e.account     === acct.id).reduce((s,e) => s + Number(e.amount), 0);
+  const xferIn  = S.transfers.filter(t => t.toAccount   === acct.id).reduce((s,t) => s + Number(t.amount), 0);
+  const xferOut = S.transfers.filter(t => t.fromAccount === acct.id).reduce((s,t) => s + Number(t.amount), 0);
+  if (acct.type === 'Credit Card') {
+    // Outstanding grows with charges, shrinks with payments-in (income or transfer-to)
+    return Number(acct.openingBalance || 0) + outflow + xferOut - inflow - xferIn;
+  }
+  return Number(acct.openingBalance || 0) + inflow + xferIn - outflow - xferOut;
 }
 
-function netWorth() {
-  return S.accounts.filter(a => !a.archived)
+function netWorth(ownerFilter) {
+  return S.accounts
+    .filter(a => !a.archived && (!ownerFilter || ownerFilter === 'All' || (a.owner || 'Joint') === ownerFilter))
     .reduce((s, a) => s + accountBalance(a) * (a.isLiability ? -1 : 1), 0);
 }
+
+function ownerOf(acct) { return acct ? (acct.owner || 'Joint') : null; }
 
 function renderDash() {
   // ── Cash Flow (period-aware) ──
@@ -2404,13 +2636,39 @@ function renderDash() {
   document.getElementById('d-liab').textContent = '₹' + fmt(Math.round(liabTotal));
   document.getElementById('d-liab-sub').textContent = active.filter(a => a.isLiability).length + ' accounts';
 
+  // Owner split (only when there's at least one account; group by owner)
+  const ownerSplitLabel = document.getElementById('d-owner-split-label');
+  const ownerSplit = document.getElementById('d-owner-split');
+  if (active.length) {
+    const owners = ['Edwin', 'Divya', 'Joint', 'AJ'];
+    const present = owners.filter(o => active.some(a => (a.owner || 'Joint') === o));
+    const ownerColor = { Edwin: 'var(--blue)', Divya: 'var(--pink)', AJ: 'var(--teal)', Joint: 'var(--amber)' };
+    ownerSplit.innerHTML = present.map((o, idx) => {
+      const nw = netWorth(o);
+      const accts = active.filter(a => (a.owner || 'Joint') === o);
+      return `<div class="split-item" ${idx === present.length - 1 ? 'style="border-bottom:none"' : ''}>
+        <div>
+          <div class="split-name" style="color:${ownerColor[o]}">${o}</div>
+          <div class="split-pct">${accts.length} account${accts.length !== 1 ? 's' : ''}</div>
+        </div>
+        <div class="split-amt" style="color:${nw >= 0 ? 'var(--ink)' : 'var(--red)'}">${nw >= 0 ? '₹' : '−₹'}${fmt(Math.abs(Math.round(nw)))}</div>
+      </div>`;
+    }).join('');
+    ownerSplit.style.display = 'block';
+    ownerSplitLabel.style.display = 'block';
+  } else {
+    ownerSplit.style.display = 'none';
+    ownerSplitLabel.style.display = 'none';
+  }
+
   const acctCard = document.getElementById('d-accounts-card');
   const acctList = document.getElementById('d-accounts-list');
   if (active.length) {
     const rows = (arr, header) => arr.length ? `<div class="acct-section-head">${header}</div>` + arr.map(a => {
       const bal = accountBalance(a);
+      const ownerClass = 'owner-' + (a.owner || 'Joint').toLowerCase();
       return `<div class="split-item" style="padding-left:14px;padding-right:14px;cursor:pointer" onclick="setLogAccountFilter(${a.id})">
-        <div><div class="split-name">${a.name}<span class="acct-chip ${a.isLiability?'liab':''}">${a.type}</span></div>
+        <div><div class="split-name">${a.name}<span class="acct-chip ${a.isLiability?'liab':''}">${a.type}</span><span class="acct-chip ${ownerClass}">${a.owner || 'Joint'}</span></div>
         <div class="split-pct">tap to view transactions</div></div>
         <div class="split-amt" style="${a.isLiability?'color:var(--red)':''}">₹${fmt(Math.round(bal))}</div>
       </div>`;
@@ -2561,10 +2819,11 @@ function renderAccountsList() {
   const row = a => {
     const bal = accountBalance(a);
     const isManual = MANUAL_VALUE_TYPES.has(a.type);
+    const ownerClass = 'owner-' + (a.owner || 'Joint').toLowerCase();
     return `
     <div class="acct-row">
       <div class="acct-row-main">
-        <div class="acct-row-name">${a.name}<span class="acct-chip ${a.isLiability?'liab':''}">${a.type}</span></div>
+        <div class="acct-row-name">${a.name}<span class="acct-chip ${a.isLiability?'liab':''}">${a.type}</span><span class="acct-chip ${ownerClass}">${a.owner || 'Joint'}</span></div>
         <div class="acct-row-sub">${a.notes ? a.notes + ' · ' : ''}opened ${a.openingDate || '—'}</div>
         ${isManual ? `
           <div class="acct-mtm">
@@ -2592,6 +2851,7 @@ function openAccountEditor(id) {
   document.getElementById('acct-edit-id').value = a ? a.id : '';
   document.getElementById('acct-name').value         = a ? a.name : '';
   document.getElementById('acct-type').value         = a ? a.type : 'Bank';
+  document.getElementById('acct-owner').value        = a ? (a.owner || 'Joint') : 'Joint';
   document.getElementById('acct-opening').value      = a ? a.openingBalance : '';
   document.getElementById('acct-opening-date').value = a ? (a.openingDate || '') : new Date().toISOString().split('T')[0];
   document.getElementById('acct-current').value      = a && a.currentValue != null ? a.currentValue : '';
@@ -2611,6 +2871,7 @@ function onAccountTypeChange() {
 async function saveAccount() {
   const name = document.getElementById('acct-name').value.trim();
   const type = document.getElementById('acct-type').value;
+  const owner = document.getElementById('acct-owner').value || 'Joint';
   if (!name) return toast('Enter an account name','err');
   const opening = parseFloat(document.getElementById('acct-opening').value || '0') || 0;
   const openingDate = document.getElementById('acct-opening-date').value || null;
@@ -2624,11 +2885,11 @@ async function saveAccount() {
   if (editId) {
     const idx = S.accounts.findIndex(a => a.id === Number(editId));
     if (idx === -1) return;
-    acct = {...S.accounts[idx], name, type, openingBalance: opening, openingDate, currentValue, isLiability, notes};
+    acct = {...S.accounts[idx], name, type, owner, openingBalance: opening, openingDate, currentValue, isLiability, notes};
     S.accounts[idx] = acct;
   } else {
     acct = {
-      id: Date.now(), name, type,
+      id: Date.now(), name, type, owner,
       openingBalance: opening, openingDate, currentValue, isLiability,
       currency: 'INR', notes, archived: false
     };
@@ -2643,6 +2904,7 @@ async function saveAccount() {
   if (S.sbUrl && S.sbKey) {
     const body = {
       id: acct.id, name: acct.name, type: acct.type,
+      owner: acct.owner,
       opening_balance: acct.openingBalance,
       opening_date: acct.openingDate || null,
       current_value: acct.currentValue,
@@ -2747,7 +3009,7 @@ function exportBackup() {
   const payload = {
     app: 'D & E Finance',
     exportedAt: new Date().toISOString(),
-    version: '2',
+    version: '3',
     config: {
       categories: S.categories,
       types: S.types,
@@ -2757,6 +3019,7 @@ function exportBackup() {
     entries: S.entries,
     income: S.income,
     accounts: S.accounts,
+    transfers: S.transfers,
   };
   dl(new Blob([JSON.stringify(payload, null, 2)], {type: 'application/json'}), `de-finance-backup-${today}.json`);
   toast('Backup downloaded', 'ok');
@@ -2806,16 +3069,19 @@ async function importBackup(input) {
     toast('Backup missing entries', '');
     return;
   }
-  const incomeArr   = Array.isArray(payload.income)   ? payload.income   : [];
-  const accountsArr = Array.isArray(payload.accounts) ? payload.accounts : [];
+  const incomeArr    = Array.isArray(payload.income)    ? payload.income    : [];
+  const accountsArr  = Array.isArray(payload.accounts)  ? payload.accounts  : [];
+  const transfersArr = Array.isArray(payload.transfers) ? payload.transfers : [];
   const eCount = payload.entries.length;
   const iCount = incomeArr.length;
   const aCount = accountsArr.length;
+  const tCount = transfersArr.length;
 
   const msg = `Restore from backup dated ${(payload.exportedAt||'').slice(0,10)}?\n\n` +
               `  • ${eCount} expenses\n` +
               `  • ${iCount} income\n` +
-              `  • ${aCount} accounts\n\n` +
+              `  • ${aCount} accounts\n` +
+              `  • ${tCount} transfers\n\n` +
               `This will REPLACE all current data.`;
   if (!confirm(msg)) return;
 
@@ -2836,7 +3102,7 @@ async function importBackup(input) {
       }).catch(() => null)
     : Promise.resolve(null);
 
-  await Promise.all([sbDel('expenses'), sbDel('income'), sbDel('accounts')]);
+  await Promise.all([sbDel('expenses'), sbDel('income'), sbDel('accounts'), sbDel('transfers')]);
 
   const batch = 50;
   // Expenses
@@ -2863,6 +3129,7 @@ async function importBackup(input) {
   for (let i = 0; i < accountsArr.length; i += batch) {
     await sbInsert('accounts', accountsArr.slice(i, i + batch).map(a => ({
       id: a.id, name: a.name, type: a.type,
+      owner: a.owner || 'Joint',
       opening_balance: a.openingBalance ?? 0,
       opening_date: a.openingDate || null,
       current_value: a.currentValue ?? null,
@@ -2870,6 +3137,14 @@ async function importBackup(input) {
       currency: a.currency || 'INR',
       notes: a.notes || null,
       archived: !!a.archived
+    })));
+  }
+  // Transfers
+  for (let i = 0; i < transfersArr.length; i += batch) {
+    await sbInsert('transfers', transfersArr.slice(i, i + batch).map(t => ({
+      id: t.id, date: t.date, amount: t.amount,
+      from_account: t.fromAccount, to_account: t.toAccount,
+      description: t.desc, month: t.month, added_by: t.addedBy
     })));
   }
 
@@ -2880,13 +3155,14 @@ async function importBackup(input) {
     S.frequencies   = payload.config.frequencies   || S.frequencies;
     S.incomeSources = payload.config.incomeSources || S.incomeSources;
   }
-  S.entries  = payload.entries;
-  S.income   = incomeArr;
-  S.accounts = accountsArr;
+  S.entries   = payload.entries;
+  S.income    = incomeArr;
+  S.accounts  = accountsArr;
+  S.transfers = transfersArr;
   saveLocal();
   buildSelects();
   renderLog();
-  toast(`✓ Restored ${eCount} expenses, ${iCount} income, ${aCount} accounts`, 'ok');
+  toast(`✓ Restored ${eCount} expenses, ${iCount} income, ${aCount} accounts, ${tCount} transfers`, 'ok');
 }
 
 function dl(blob, name) {
