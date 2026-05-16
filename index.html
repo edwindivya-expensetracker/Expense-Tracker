@@ -2799,14 +2799,14 @@ function renderDash() {
   netCard.style.background  = net >= 0 ? 'var(--green-bg)' : '#fff0f0';
   netCard.style.borderColor = net >= 0 ? '#a0d4b8' : '#ffb3b3';
 
-  // Income split by who received it; Expenses split both ways (For + Paid By)
+  // Income split by who received it; Expenses split by who paid (the
+  // "For" split lives in the Expense Breakdown card below)
   const sumBy = (rows, field, name, valFn) => rows.filter(r => r[field] === name).reduce((s,r) => s + Number(valFn(r)), 0);
   const incByPerson = ['Edwin','Divya'].map(n => [n, sumBy(inc, 'receivedBy', n, i => i.amount)]);
-  const expByFor    = ['Edwin','Divya','Both','AJ'].map(n => [n, sumBy(es, 'forWhom', n, e => e.amount)]);
   const expByPaid   = ['Edwin','Divya'].map(n => [n, sumBy(es, 'paidBy', n, e => e.amount)]);
   document.getElementById('d-cf-income-split').innerHTML = cardSplitHTML([{pairs: incByPerson}]);
   document.getElementById('d-cf-expense-split').innerHTML = cardSplitHTML([
-    {head:'For', pairs: expByFor}, {head:'Paid By', pairs: expByPaid}
+    {head:'Paid By', pairs: expByPaid}
   ]);
 
   // ── Net Worth (always today) ──
