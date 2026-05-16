@@ -696,6 +696,29 @@ select.finput option { background: white; color: var(--ink); }
 .split-pct { font-size: 12px; color: var(--ink3); margin-top: 2px; }
 .split-amt { font-family: 'Playfair Display', serif; font-size: 17px; color: var(--ink); }
 
+/* ── Account groups (Summary) ── */
+.acct-group { border-bottom: 1px solid var(--border); }
+.acct-group:last-child { border-bottom: none; }
+.acct-group-head {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 13px 14px; cursor: pointer; user-select: none;
+}
+.acct-group-label { font-size: 14px; font-weight: 600; color: var(--ink); }
+.acct-group-count {
+  font-size: 11px; color: var(--ink3); font-weight: 500;
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 10px; padding: 1px 7px; margin-left: 7px;
+}
+.acct-group-total {
+  font-family: 'Playfair Display', serif; font-size: 17px; color: var(--ink);
+  display: flex; align-items: center; gap: 8px;
+}
+.acct-group-total.liab { color: var(--red); }
+.acct-group-chevron { font-size: 11px; color: var(--ink3); transition: transform .15s ease; }
+.acct-group.collapsed .acct-group-chevron { transform: rotate(-90deg); }
+.acct-group.collapsed .acct-group-body { display: none; }
+.acct-group-body { background: var(--bg); }
+
 /* ── CONFIG ── */
 .cfg-card {
   background: var(--surface);
@@ -1921,6 +1944,18 @@ function goPage(name, navEl) {
 // Order account-type <optgroup>s appear in; unknown types fall to the end.
 const ACCOUNT_TYPE_ORDER = ['Bank','Cash','Credit Card','Loan','Investment','Asset','Receivable','Payable'];
 
+// Friendly group labels for the Summary accounts list.
+const ACCOUNT_GROUP_LABELS = {
+  'Bank': 'Bank Accounts',
+  'Cash': 'Cash',
+  'Credit Card': 'Credit Cards',
+  'Loan': 'Loans',
+  'Investment': 'Investments',
+  'Asset': 'Other Assets',
+  'Receivable': "You're owed",
+  'Payable': 'You owe',
+};
+
 // Builds account <option>s grouped into <optgroup>s by type. The native
 // picker (incl. iOS) renders each group label as a bold section header.
 function accountOptionsHTML(placeholder, currentVal) {
@@ -2799,16 +2834,39 @@ function renderDash() {
   const acctCard = document.getElementById('d-accounts-card');
   const acctList = document.getElementById('d-accounts-list');
   if (active.length) {
-    const rows = (arr, header) => arr.length ? `<div class="acct-section-head">${header}</div>` +
-      [...arr].sort((x,y) => accountBalance(y) - accountBalance(x)).map(a => {
-      const bal = accountBalance(a);
-      const ownerClass = 'owner-' + (a.owner || 'Joint').toLowerCase();
-      return `<div class="split-item" style="padding-left:14px;padding-right:14px;cursor:pointer" onclick="setLogAccountFilter(${a.id})">
-        <div><div class="split-name">${a.name}<span class="acct-chip ${a.isLiability?'liab':''}">${a.type}</span><span class="acct-chip ${ownerClass}">${a.owner || 'Joint'}</span></div>
-        <div class="split-pct">tap to view transactions</div></div>
-        <div class="split-amt" style="${a.isLiability?'color:var(--red)':''}">₹${fmt(Math.round(bal))}</div>
-      </div>`;
-    }).join('') : '';
+    // Accounts are grouped by type into collapsible groups; each group's
+    // top line shows the combined total, tap to reveal the accounts.
+    const rows = (arr, header) => {
+      if (!arr.length) return '';
+      const groups = {};
+      arr.forEach(a => { (groups[a.type] = groups[a.type] || []).push(a); });
+      const groupHTML = Object.entries(groups)
+        .map(([type, accts]) => ({
+          type, accts, total: accts.reduce((s,a) => s + accountBalance(a), 0),
+        }))
+        .sort((x,y) => y.total - x.total)
+        .map(g => {
+          const isLiab = g.accts[0].isLiability;
+          const label = ACCOUNT_GROUP_LABELS[g.type] || g.type;
+          const items = [...g.accts].sort((x,y) => accountBalance(y) - accountBalance(x)).map(a => {
+            const bal = accountBalance(a);
+            const ownerClass = 'owner-' + (a.owner || 'Joint').toLowerCase();
+            return `<div class="split-item" style="padding-left:26px;padding-right:14px;cursor:pointer" onclick="setLogAccountFilter(${a.id})">
+              <div><div class="split-name">${a.name}<span class="acct-chip ${ownerClass}">${a.owner || 'Joint'}</span></div>
+              <div class="split-pct">tap to view transactions</div></div>
+              <div class="split-amt" style="${isLiab?'color:var(--red)':''}">₹${fmt(Math.round(bal))}</div>
+            </div>`;
+          }).join('');
+          return `<div class="acct-group collapsed">
+            <div class="acct-group-head" onclick="toggleAcctGroup(this)">
+              <div class="acct-group-label">${label}<span class="acct-group-count">${g.accts.length}</span></div>
+              <div class="acct-group-total ${isLiab?'liab':''}">₹${fmt(Math.round(g.total))}<span class="acct-group-chevron">▾</span></div>
+            </div>
+            <div class="acct-group-body">${items}</div>
+          </div>`;
+        }).join('');
+      return `<div class="acct-section-head">${header}</div>` + groupHTML;
+    };
     acctList.innerHTML = rows(active.filter(a => !a.isLiability), 'Assets') + rows(active.filter(a => a.isLiability), 'Liabilities');
     acctCard.style.display = 'block';
   } else {
@@ -2898,6 +2956,10 @@ function delCfgItem(key, i) {
 }
 
 function toggleCfgCard(head) {
+  head.parentElement.classList.toggle('collapsed');
+}
+
+function toggleAcctGroup(head) {
   head.parentElement.classList.toggle('collapsed');
 }
 
