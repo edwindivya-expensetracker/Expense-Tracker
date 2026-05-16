@@ -653,6 +653,7 @@ select.finput option { background: white; color: var(--ink); }
 .stat-card.full { grid-column: 1/-1; }
 .stat-card.amber { background: var(--amber-bg); border-color: var(--amber-border); }
 .stat-card.green { background: var(--green-bg); border-color: #a0d4b8; }
+.stat-card.red { background: #fff0f0; border-color: #ffb3b3; }
 .stat-lbl { font-size: 11px; color: var(--ink3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; font-weight: 600; }
 .stat-val {
   font-family: 'Playfair Display', serif;
@@ -1243,15 +1244,15 @@ select.modal-input option { background: white; }
         <div class="stat-sub" id="d-cf-income-sub">0 entries</div>
         <div class="card-split" id="d-cf-income-split"></div>
       </div>
-      <div class="stat-card amber">
+      <div class="stat-card red">
         <div class="stat-lbl">Expenses</div>
-        <div class="stat-val" id="d-cf-expense">₹0</div>
+        <div class="stat-val" id="d-cf-expense" style="color:var(--red)">₹0</div>
         <div class="stat-sub" id="d-cf-expense-sub">0 entries</div>
         <div class="card-split" id="d-cf-expense-split"></div>
       </div>
     </div>
     <div class="stat-grid">
-      <div class="stat-card full" id="d-cf-net-card">
+      <div class="stat-card full" id="d-cf-net-card" style="text-align:center">
         <div class="stat-lbl">Net (Income − Expenses)</div>
         <div class="stat-val" id="d-cf-net">₹0</div>
         <div class="stat-sub" id="d-cf-net-sub">—</div>
@@ -2319,6 +2320,21 @@ function setCategoryFilter(val) {
   renderLog();
 }
 
+// Tapping a person row in a Summary split jumps to the Log filtered to them
+function setLogPersonFilterGo(name, kind) {
+  S.logFilter = name;
+  S.logKind = kind || 'All';
+  S.logCategoryFilter = 'All';
+  S.logAccountFilter = null;
+  document.querySelectorAll('#page-log .log-bar').forEach(bar => {
+    bar.querySelectorAll('.log-chip').forEach(c =>
+      c.classList.toggle('active', c.dataset.k === S.logKind || c.dataset.f === name));
+  });
+  const navItem = [...document.querySelectorAll('.nav-item')]
+    .find(n => n.querySelector('.nav-label')?.textContent.trim() === 'LOG');
+  if (navItem) goPage('log', navItem); else renderLog();
+}
+
 // Tapping a Top-Categories bar jumps to the Log filtered to that category
 function setLogCategoryFilterGo(cat) {
   S.logCategoryFilter = cat;
@@ -2761,6 +2777,8 @@ function ownerOf(acct) { return acct ? (acct.owner || 'Joint') : null; }
 // Build the per-person split shown inside a stat card.
 // groups: [{head?, pairs:[[name,amount],...]}]. Zero rows dropped; % is the
 // row's share of its group total (skipped when the group total isn't positive).
+// groups[].link — when set to a log kind ('Expense' / 'Income'), each
+// person row becomes a tap target that opens the Log filtered to it.
 function cardSplitHTML(groups) {
   const PCLASS = { Edwin:'p-edwin', Divya:'p-divya', AJ:'p-aj', Joint:'p-joint', Both:'p-joint' };
   let html = '';
@@ -2772,7 +2790,8 @@ function cardSplitHTML(groups) {
     rows.forEach(([name, amt]) => {
       const pct = denom > 0 ? Math.round(amt / denom * 100) : null;
       const disp = name === 'Both' ? 'Joint' : name;
-      html += `<div class="card-split-row">`
+      const tap = g.link ? ` onclick="setLogPersonFilterGo('${name}','${g.link}')" style="cursor:pointer"` : '';
+      html += `<div class="card-split-row"${tap}>`
         + `<span class="csr-name ${PCLASS[name] || ''}">${disp}</span>`
         + `<span class="csr-val">${amt < 0 ? '−' : ''}₹${fmt(Math.abs(Math.round(amt)))}`
         + (pct != null ? ` <span class="csr-pct">(${pct}%)</span>` : '')
@@ -2806,7 +2825,7 @@ function renderDash() {
   const sumBy = (rows, field, name, valFn) => rows.filter(r => r[field] === name).reduce((s,r) => s + Number(valFn(r)), 0);
   const incByPerson = ['Edwin','Divya'].map(n => [n, sumBy(inc, 'receivedBy', n, i => i.amount)]);
   const expByPaid   = ['Edwin','Divya'].map(n => [n, sumBy(es, 'paidBy', n, e => e.amount)]);
-  document.getElementById('d-cf-income-split').innerHTML = cardSplitHTML([{pairs: incByPerson}]);
+  document.getElementById('d-cf-income-split').innerHTML = cardSplitHTML([{pairs: incByPerson, link:'Income'}]);
   document.getElementById('d-cf-expense-split').innerHTML = cardSplitHTML([
     {head:'Paid By', pairs: expByPaid}
   ]);
@@ -2898,11 +2917,11 @@ function renderDash() {
 
   // Each expense-type card gets a "For" split
   const forSplit = subset => ['Edwin','Divya','Both','AJ'].map(n => [n, sumBy(subset, 'forWhom', n, e => e.amount)]);
-  document.getElementById('d-total-split').innerHTML  = cardSplitHTML([{pairs: forSplit(es)}]);
-  document.getElementById('d-save-split').innerHTML   = cardSplitHTML([{pairs: forSplit(esSave)}]);
-  document.getElementById('d-ess-split').innerHTML    = cardSplitHTML([{pairs: forSplit(esEss)}]);
-  document.getElementById('d-noness-split').innerHTML = cardSplitHTML([{pairs: forSplit(esNon)}]);
-  document.getElementById('d-fun-split').innerHTML    = cardSplitHTML([{pairs: forSplit(esFun)}]);
+  document.getElementById('d-total-split').innerHTML  = cardSplitHTML([{pairs: forSplit(es),     link:'Expense'}]);
+  document.getElementById('d-save-split').innerHTML   = cardSplitHTML([{pairs: forSplit(esSave), link:'Expense'}]);
+  document.getElementById('d-ess-split').innerHTML    = cardSplitHTML([{pairs: forSplit(esEss),  link:'Expense'}]);
+  document.getElementById('d-noness-split').innerHTML = cardSplitHTML([{pairs: forSplit(esNon),  link:'Expense'}]);
+  document.getElementById('d-fun-split').innerHTML    = cardSplitHTML([{pairs: forSplit(esFun),  link:'Expense'}]);
 
   // Bars
   const catTot = {};
