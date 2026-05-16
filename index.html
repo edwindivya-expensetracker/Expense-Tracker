@@ -1897,6 +1897,32 @@ function goPage(name, navEl) {
 // ══════════════════════════════════════════════════
 //  FORM
 // ══════════════════════════════════════════════════
+
+// Order account-type <optgroup>s appear in; unknown types fall to the end.
+const ACCOUNT_TYPE_ORDER = ['Bank','Cash','Credit Card','Loan','Investment','Asset','Receivable','Payable'];
+
+// Builds account <option>s grouped into <optgroup>s by type. The native
+// picker (incl. iOS) renders each group label as a bold section header.
+function accountOptionsHTML(placeholder, currentVal) {
+  const groups = {};
+  S.accounts.filter(a => !a.archived).forEach(a => {
+    const t = a.type || 'Other';
+    (groups[t] = groups[t] || []).push(a);
+  });
+  const types = [
+    ...ACCOUNT_TYPE_ORDER.filter(t => groups[t]),
+    ...Object.keys(groups).filter(t => !ACCOUNT_TYPE_ORDER.includes(t)).sort(),
+  ];
+  const body = types.map(t =>
+    `<optgroup label="${t}">` +
+    groups[t].map(a =>
+      `<option value="${a.id}"${a.id === currentVal ? ' selected' : ''}>${a.name} (${a.owner || 'Joint'})</option>`
+    ).join('') +
+    `</optgroup>`
+  ).join('');
+  return `<option value="">${placeholder}</option>` + body;
+}
+
 function buildSelects() {
   // Trailing option on Expense/Income dropdowns — selecting it jumps to Config
   const addOpt = label => `<option value="__add__">＋ Add new ${label}…</option>`;
@@ -1910,22 +1936,18 @@ function buildSelects() {
   const frq = document.getElementById('f-freq');
   frq.innerHTML = '<option value="">Select…</option>' + S.frequencies.map(f => `<option>${f}</option>`).join('') + addOpt('frequency');
 
-  const acctOpts = '<option value="">— None —</option>' +
-    S.accounts.filter(a => !a.archived)
-      .map(a => `<option value="${a.id}">${a.name} (${a.owner || 'Joint'})</option>`).join('');
   // Expense/Income account selects get the "add new" shortcut; the edit modal doesn't.
   ['f-account','i-account'].forEach(id => {
-    const el = document.getElementById(id); if (el) el.innerHTML = acctOpts + addOpt('account');
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = accountOptionsHTML('— None —') + addOpt('account');
   });
   const editAcct = document.getElementById('edit-account');
-  if (editAcct) editAcct.innerHTML = acctOpts;
+  if (editAcct) editAcct.innerHTML = accountOptionsHTML('— None —');
 
   // Transfer selects need their own placeholder (— Select —) since both are required
-  const xferOpts = '<option value="">— Select —</option>' +
-    S.accounts.filter(a => !a.archived)
-      .map(a => `<option value="${a.id}">${a.name} (${a.owner || 'Joint'})</option>`).join('');
   ['t-from','t-to','edit-from','edit-to'].forEach(id => {
-    const el = document.getElementById(id); if (el) el.innerHTML = xferOpts;
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = accountOptionsHTML('— Select —');
   });
 
   const srcSel = document.getElementById('i-source');
@@ -2282,8 +2304,7 @@ function setModalKind(kind) {
 
 function fillAccountSelect(selId, currentVal) {
   const el = document.getElementById(selId);
-  el.innerHTML = '<option value="">— None —</option>' +
-    S.accounts.filter(a => !a.archived).map(a => `<option value="${a.id}"${a.id === currentVal ? ' selected' : ''}>${a.name}</option>`).join('');
+  el.innerHTML = accountOptionsHTML('— None —', currentVal);
 }
 
 function openEditModal(id) {
