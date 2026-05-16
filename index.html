@@ -2029,6 +2029,8 @@ function jumpToConfigAdd(target) {
     }
     const row = document.getElementById('add-' + target);
     if (!row) return;
+    // The target cfg-card starts collapsed — expand it so the add-row shows.
+    row.closest('.cfg-card')?.classList.remove('collapsed');
     row.classList.add('show');
     row.scrollIntoView({ behavior: 'smooth', block: 'center' });
     const inp = document.getElementById('new-' + target);
@@ -3033,6 +3035,8 @@ function renderAccountsList() {
 function openAccountEditor(id) {
   const ed = document.getElementById('acct-editor');
   ed.classList.add('show');
+  // The Accounts cfg-card starts collapsed — expand it so the editor shows.
+  document.getElementById('cfg-acct-list')?.closest('.cfg-card')?.classList.remove('collapsed');
   const a = id != null ? S.accounts.find(x => x.id === id) : null;
   document.getElementById('acct-edit-id').value = a ? a.id : '';
   document.getElementById('acct-name').value         = a ? a.name : '';
