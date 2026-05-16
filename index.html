@@ -1213,6 +1213,13 @@ select.modal-input option { background: white; }
       <div class="log-chip" data-f="AJ" onclick="setLogFilter(this)">AJ</div>
       <div class="log-chip" data-f="Both" onclick="setLogFilter(this)">Both</div>
     </div>
+    <div class="log-bar">
+      <div class="log-chip active" data-t="All" onclick="setLogTypeFilter(this)">All Types</div>
+      <div class="log-chip" data-t="Essentials" onclick="setLogTypeFilter(this)">Essentials</div>
+      <div class="log-chip" data-t="Non-Essentials" onclick="setLogTypeFilter(this)">Non-Essentials</div>
+      <div class="log-chip" data-t="Fun" onclick="setLogTypeFilter(this)">Fun</div>
+      <div class="log-chip" data-t="Saveable" onclick="setLogTypeFilter(this)">Saveable</div>
+    </div>
     <div id="log-account-banner" style="display:none;padding:8px 12px;background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:10px;margin:0 0 10px;font-size:12.5px;color:var(--amber);align-items:center;gap:8px">
       <span id="log-account-banner-text"></span>
       <button onclick="clearLogAccountFilter()" style="margin-left:auto;background:none;border:none;color:var(--amber);font-weight:600;cursor:pointer">✕ Clear</button>
@@ -1685,6 +1692,7 @@ let S = {
   logCategoryFilter: 'All',
   logSearch: '',
   logKind: 'All',
+  logType: 'All',
   logAccountFilter: null,
   logPeriod: 'all',
   dashOwner: 'All'
@@ -2306,18 +2314,27 @@ function setLogKind(el) {
   renderLog();
 }
 
+function setLogTypeFilter(el) {
+  el.parentElement.querySelectorAll('.log-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  S.logType = el.dataset.t;
+  renderLog();
+}
+
+function goToLog() {
+  const navItem = [...document.querySelectorAll('.nav-item')]
+    .find(n => n.querySelector('.nav-label')?.textContent.trim() === 'LOG');
+  if (navItem) goPage('log', navItem); else renderLog();
+}
+
 function setLogAccountFilter(id) {
   S.logAccountFilter = id;
   S.logKind = 'All';
   S.logFilter = 'All';
+  S.logType = 'All';
   S.logCategoryFilter = 'All';
   S.logPeriod = 'all';
-  document.querySelectorAll('#page-log .log-bar').forEach(bar => {
-    bar.querySelectorAll('.log-chip').forEach(c => c.classList.toggle('active', c.dataset.k === 'All' || c.dataset.f === 'All'));
-  });
-  const navItem = [...document.querySelectorAll('.nav-item')]
-    .find(n => n.querySelector('.nav-label')?.textContent.trim() === 'LOG');
-  if (navItem) goPage('log', navItem); else renderLog();
+  goToLog();
 }
 
 function clearLogAccountFilter() {
@@ -2336,19 +2353,14 @@ function setCategoryFilter(val) {
 }
 
 // Tapping a person row in a Summary split jumps to the Log filtered to them
-function setLogPersonFilterGo(name, kind) {
+function setLogPersonFilterGo(name, kind, type) {
   S.logFilter = name;
   S.logKind = kind || 'All';
+  S.logType = type || 'All';
   S.logCategoryFilter = 'All';
   S.logAccountFilter = null;
   S.logPeriod = S.dashPeriod;
-  document.querySelectorAll('#page-log .log-bar').forEach(bar => {
-    bar.querySelectorAll('.log-chip').forEach(c =>
-      c.classList.toggle('active', c.dataset.k === S.logKind || c.dataset.f === name));
-  });
-  const navItem = [...document.querySelectorAll('.nav-item')]
-    .find(n => n.querySelector('.nav-label')?.textContent.trim() === 'LOG');
-  if (navItem) goPage('log', navItem); else renderLog();
+  goToLog();
 }
 
 // Tapping a Top-Categories bar jumps to the Log filtered to that category
@@ -2356,14 +2368,10 @@ function setLogCategoryFilterGo(cat) {
   S.logCategoryFilter = cat;
   S.logKind = 'Expense';
   S.logFilter = 'All';
+  S.logType = 'All';
   S.logAccountFilter = null;
   S.logPeriod = S.dashPeriod;
-  document.querySelectorAll('#page-log .log-bar').forEach(bar => {
-    bar.querySelectorAll('.log-chip').forEach(c => c.classList.toggle('active', c.dataset.k === 'Expense' || c.dataset.f === 'All'));
-  });
-  const navItem = [...document.querySelectorAll('.nav-item')]
-    .find(n => n.querySelector('.nav-label')?.textContent.trim() === 'LOG');
-  if (navItem) goPage('log', navItem); else renderLog();
+  goToLog();
 }
 
 function renderCategoryBar() {
@@ -2570,6 +2578,14 @@ function clearLogSearch() {
 
 function renderLog() {
   renderCategoryBar();
+  // Keep all filter chips in sync with state (covers Summary drill-downs)
+  document.querySelectorAll('#page-log .log-chip').forEach(c => {
+    let on = false;
+    if (c.dataset.k != null)      on = c.dataset.k === S.logKind;
+    else if (c.dataset.f != null) on = c.dataset.f === S.logFilter;
+    else if (c.dataset.t != null) on = c.dataset.t === S.logType;
+    c.classList.toggle('active', on);
+  });
   const list = document.getElementById('log-list');
   const totalBar = document.getElementById('log-total-bar');
   const acctBanner = document.getElementById('log-account-banner');
@@ -2624,6 +2640,10 @@ function renderLog() {
   }
   if (S.logCategoryFilter !== 'All') {
     items = items.filter(x => x._kind === 'expense' && x.category === S.logCategoryFilter);
+  }
+  if (S.logType !== 'All') {
+    items = items.filter(x => x._kind === 'expense' &&
+      (S.logType === 'Saveable' ? x.saving === 'Yes' : x.type === S.logType));
   }
   if (S.logPeriod !== 'all' && S.logPeriod !== 'year') {
     items = items.filter(x => inPeriod(x.date, S.logPeriod));
@@ -2823,7 +2843,7 @@ function cardSplitHTML(groups) {
     rows.forEach(([name, amt]) => {
       const pct = denom > 0 ? Math.round(amt / denom * 100) : null;
       const disp = name === 'Both' ? 'Joint' : name;
-      const tap = g.link ? ` onclick="setLogPersonFilterGo('${name}','${g.link}')" style="cursor:pointer"` : '';
+      const tap = g.link ? ` onclick="setLogPersonFilterGo('${name}','${g.link}','${g.linkType || ''}')" style="cursor:pointer"` : '';
       html += `<div class="card-split-row"${tap}>`
         + `<span class="csr-name ${PCLASS[name] || ''}">${disp}</span>`
         + `<span class="csr-val">${amt < 0 ? '−' : ''}₹${fmt(Math.abs(Math.round(amt)))}`
@@ -2951,10 +2971,10 @@ function renderDash() {
   // Each expense-type card gets a "For" split
   const forSplit = subset => ['Edwin','Divya','Both','AJ'].map(n => [n, sumBy(subset, 'forWhom', n, e => e.amount)]);
   document.getElementById('d-total-split').innerHTML  = cardSplitHTML([{pairs: forSplit(es),     link:'Expense'}]);
-  document.getElementById('d-save-split').innerHTML   = cardSplitHTML([{pairs: forSplit(esSave), link:'Expense'}]);
-  document.getElementById('d-ess-split').innerHTML    = cardSplitHTML([{pairs: forSplit(esEss),  link:'Expense'}]);
-  document.getElementById('d-noness-split').innerHTML = cardSplitHTML([{pairs: forSplit(esNon),  link:'Expense'}]);
-  document.getElementById('d-fun-split').innerHTML    = cardSplitHTML([{pairs: forSplit(esFun),  link:'Expense'}]);
+  document.getElementById('d-save-split').innerHTML   = cardSplitHTML([{pairs: forSplit(esSave), link:'Expense', linkType:'Saveable'}]);
+  document.getElementById('d-ess-split').innerHTML    = cardSplitHTML([{pairs: forSplit(esEss),  link:'Expense', linkType:'Essentials'}]);
+  document.getElementById('d-noness-split').innerHTML = cardSplitHTML([{pairs: forSplit(esNon),  link:'Expense', linkType:'Non-Essentials'}]);
+  document.getElementById('d-fun-split').innerHTML    = cardSplitHTML([{pairs: forSplit(esFun),  link:'Expense', linkType:'Fun'}]);
 
   // Bars
   const catTot = {};
