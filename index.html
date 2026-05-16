@@ -1397,6 +1397,8 @@ select.modal-input option { background: white; }
             <option value="Loan">Loan</option>
             <option value="Investment">Investment</option>
             <option value="Asset">Asset</option>
+            <option value="Receivable">Receivable (owed to me)</option>
+            <option value="Payable">Payable (I owe)</option>
           </select>
         </div>
         <div class="frow">
@@ -2650,9 +2652,11 @@ function filteredIncome()  { return S.income .filter(i => inPeriod(i.date)); }
 
 // ── Balances & net worth ─────────────────────────────────────────────
 // Returned balance convention:
-//   - Asset-type accounts (Bank, Cash, Investment, Asset): positive = funds you own
-//   - Liability-type accounts (Credit Card, Loan): positive = magnitude you owe
+//   - Asset-type accounts (Bank, Cash, Investment, Asset, Receivable): positive = value you hold
+//   - Liability-type accounts (Credit Card, Loan, Payable): positive = magnitude you owe
 // netWorth flips liability sign so each contributes correctly.
+// Receivable/Payable are computed (transaction-driven): lending/borrowing/
+// repayment all flow through Transfers; opening_balance carries pre-existing debt.
 function accountBalance(acct) {
   if (acct.type === 'Investment' || acct.type === 'Asset' || acct.type === 'Loan') {
     return Number(acct.currentValue ?? acct.openingBalance ?? 0);
@@ -2661,8 +2665,8 @@ function accountBalance(acct) {
   const outflow = S.entries  .filter(e => e.account     === acct.id).reduce((s,e) => s + Number(e.amount), 0);
   const xferIn  = S.transfers.filter(t => t.toAccount   === acct.id).reduce((s,t) => s + Number(t.amount), 0);
   const xferOut = S.transfers.filter(t => t.fromAccount === acct.id).reduce((s,t) => s + Number(t.amount), 0);
-  if (acct.type === 'Credit Card') {
-    // Outstanding grows with charges, shrinks with payments-in (income or transfer-to)
+  if (acct.type === 'Credit Card' || acct.type === 'Payable') {
+    // Outstanding grows with charges / money-out, shrinks with payments-in
     return Number(acct.openingBalance || 0) + outflow + xferOut - inflow - xferIn;
   }
   return Number(acct.openingBalance || 0) + inflow + xferIn - outflow - xferOut;
@@ -2876,7 +2880,7 @@ function addCfgItem(key) {
 // ══════════════════════════════════════════════════
 //  ACCOUNTS
 // ══════════════════════════════════════════════════
-const LIABILITY_TYPES = new Set(['Credit Card','Loan']);
+const LIABILITY_TYPES = new Set(['Credit Card','Loan','Payable']);
 const MANUAL_VALUE_TYPES = new Set(['Investment','Asset','Loan']);
 
 function renderAccountsList() {
