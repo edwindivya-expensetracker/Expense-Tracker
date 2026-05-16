@@ -624,19 +624,20 @@ select.finput option { background: white; color: var(--ink); }
 }
 
 /* ── DASHBOARD ── */
-.period-row { display: flex; gap: 8px; margin: 14px 0 16px; }
+.period-row { display: flex; gap: 6px; margin: 14px 0 16px; }
 .period-btn {
   flex: 1;
-  padding: 10px 6px;
+  padding: 10px 4px;
   border-radius: 10px;
   border: 1.5px solid var(--border2);
   background: var(--surface);
   color: var(--ink2);
   font-family: 'Outfit', sans-serif;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   cursor: pointer;
   text-align: center;
+  white-space: nowrap;
   transition: all 0.15s;
 }
 .period-btn.active { background: var(--ink); border-color: var(--ink); color: white; }
@@ -1200,7 +1201,8 @@ select.modal-input option { background: white; }
   <!-- DASHBOARD PAGE -->
   <div id="page-dash" class="page">
     <div class="period-row">
-      <div class="period-btn active" onclick="setPeriod('month',this)">Month</div>
+      <div class="period-btn active" onclick="setPeriod('month',this)">This Month</div>
+      <div class="period-btn" onclick="setPeriod('lastmonth',this)">Last Month</div>
       <div class="period-btn" onclick="setPeriod('quarter',this)">Quarter</div>
       <div class="period-btn" onclick="setPeriod('year',this)">Full Year</div>
     </div>
@@ -2236,6 +2238,20 @@ function setCategoryFilter(val) {
   renderLog();
 }
 
+// Tapping a Top-Categories bar jumps to the Log filtered to that category
+function setLogCategoryFilterGo(cat) {
+  S.logCategoryFilter = cat;
+  S.logKind = 'Expense';
+  S.logFilter = 'All';
+  S.logAccountFilter = null;
+  document.querySelectorAll('#page-log .log-bar').forEach(bar => {
+    bar.querySelectorAll('.log-chip').forEach(c => c.classList.toggle('active', c.dataset.k === 'Expense' || c.dataset.f === 'All'));
+  });
+  const navItem = [...document.querySelectorAll('.nav-item')]
+    .find(n => n.querySelector('.nav-label')?.textContent.trim() === 'LOG');
+  if (navItem) goPage('log', navItem); else renderLog();
+}
+
 function renderCategoryBar() {
   const sel = document.getElementById('cat-filter-select');
   const usedCats = [...new Set(S.entries.map(e => e.category))].sort();
@@ -2621,6 +2637,10 @@ function inPeriod(dateStr) {
   const now = new Date();
   const d = new Date(dateStr + 'T00:00:00');
   if (S.dashPeriod === 'month')   return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  if (S.dashPeriod === 'lastmonth') {
+    const lm = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    return d.getMonth() === lm.getMonth() && d.getFullYear() === lm.getFullYear();
+  }
   if (S.dashPeriod === 'quarter') return Math.floor(d.getMonth()/3) === Math.floor(now.getMonth()/3) && d.getFullYear() === now.getFullYear();
   return true;
 }
@@ -2663,7 +2683,7 @@ function cardSplitHTML(groups) {
   const PCLASS = { Edwin:'p-edwin', Divya:'p-divya', AJ:'p-aj', Joint:'p-joint', Both:'p-joint' };
   let html = '';
   groups.forEach(g => {
-    const rows = g.pairs.filter(([,amt]) => Math.round(amt) !== 0);
+    const rows = g.pairs.filter(([,amt]) => Math.round(amt) !== 0).sort((a,b) => b[1] - a[1]);
     if (!rows.length) return;
     const denom = rows.reduce((s,[,amt]) => s + amt, 0);
     if (g.head) html += `<div class="card-split-head">${g.head}</div>`;
@@ -2734,7 +2754,8 @@ function renderDash() {
   const acctCard = document.getElementById('d-accounts-card');
   const acctList = document.getElementById('d-accounts-list');
   if (active.length) {
-    const rows = (arr, header) => arr.length ? `<div class="acct-section-head">${header}</div>` + arr.map(a => {
+    const rows = (arr, header) => arr.length ? `<div class="acct-section-head">${header}</div>` +
+      [...arr].sort((x,y) => accountBalance(y) - accountBalance(x)).map(a => {
       const bal = accountBalance(a);
       const ownerClass = 'owner-' + (a.owner || 'Joint').toLowerCase();
       return `<div class="split-item" style="padding-left:14px;padding-right:14px;cursor:pointer" onclick="setLogAccountFilter(${a.id})">
@@ -2785,7 +2806,7 @@ function renderDash() {
   const mx = sorted[0]?.[1] || 1;
   document.getElementById('d-bars').innerHTML = sorted.length
     ? sorted.map(([c,v]) => `
-        <div class="bar-item">
+        <div class="bar-item" style="cursor:pointer" onclick="setLogCategoryFilterGo('${c.replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')">
           <div class="bar-name">${c}</div>
           <div class="bar-track"><div class="bar-fill" style="width:${v/mx*100}%"></div></div>
           <div class="bar-val" style="width:90px;text-align:right">₹${Math.round(v/1000)}k <span style="color:var(--ink3);font-size:11px">(${total ? Math.round(v/total*100) : 0}%)</span></div>
