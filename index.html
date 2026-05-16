@@ -1043,7 +1043,7 @@ select.modal-input option { background: white; }
     <div class="fcard">
       <div class="frow">
         <span class="amt-sym">₹</span>
-        <input class="finput" id="f-amount" type="number" inputmode="decimal" placeholder="0.00" style="font-size:30px;font-weight:300">
+        <input class="finput" id="f-amount" type="text" inputmode="decimal" oninput="onAmountInput(this)" placeholder="0.00" style="font-size:30px;font-weight:300">
       </div>
     </div>
 
@@ -1115,7 +1115,7 @@ select.modal-input option { background: white; }
     <div class="fcard">
       <div class="frow">
         <span class="amt-sym">₹</span>
-        <input class="finput" id="i-amount" type="number" inputmode="decimal" placeholder="0.00" style="font-size:30px;font-weight:300">
+        <input class="finput" id="i-amount" type="text" inputmode="decimal" oninput="onAmountInput(this)" placeholder="0.00" style="font-size:30px;font-weight:300">
       </div>
     </div>
 
@@ -1163,7 +1163,7 @@ select.modal-input option { background: white; }
     <div class="fcard">
       <div class="frow">
         <span class="amt-sym">₹</span>
-        <input class="finput" id="t-amount" type="number" inputmode="decimal" placeholder="0.00" style="font-size:30px;font-weight:300">
+        <input class="finput" id="t-amount" type="text" inputmode="decimal" oninput="onAmountInput(this)" placeholder="0.00" style="font-size:30px;font-weight:300">
       </div>
     </div>
 
@@ -1471,7 +1471,7 @@ select.modal-input option { background: white; }
         </div>
         <div class="frow">
           <span class="flabel">Opening Balance (₹)</span>
-          <input id="acct-opening" type="number" inputmode="decimal" placeholder="0">
+          <input id="acct-opening" type="text" inputmode="decimal" oninput="onAmountInput(this)" placeholder="0">
         </div>
         <div class="frow">
           <span class="flabel">Opening Date</span>
@@ -1479,7 +1479,7 @@ select.modal-input option { background: white; }
         </div>
         <div class="frow" id="acct-cv-row" style="display:none">
           <span class="flabel">Current Value (₹)</span>
-          <input id="acct-current" type="number" inputmode="decimal" placeholder="0">
+          <input id="acct-current" type="text" inputmode="decimal" oninput="onAmountInput(this)" placeholder="0">
         </div>
         <div class="frow">
           <span class="flabel">Notes</span>
@@ -1522,7 +1522,7 @@ select.modal-input option { background: white; }
 
       <div class="modal-field">
         <div class="modal-label">Amount (₹)</div>
-        <input class="modal-input" id="edit-amount" type="number" inputmode="decimal">
+        <input class="modal-input" id="edit-amount" type="text" inputmode="decimal" oninput="onAmountInput(this)">
       </div>
       <div class="modal-field edit-only-expense">
         <div class="modal-label">Category</div>
@@ -2095,7 +2095,7 @@ function setDefaultDate() {
 }
 
 async function submitExpense() {
-  const amount = parseFloat(document.getElementById('f-amount').value);
+  const amount = parseAmount(document.getElementById('f-amount').value);
   const category = document.getElementById('f-cat').value;
   const type = document.getElementById('f-type').value;
   const freq = document.getElementById('f-freq').value;
@@ -2165,7 +2165,7 @@ function resetForm() {
 }
 
 async function submitIncome() {
-  const amount = parseFloat(document.getElementById('i-amount').value);
+  const amount = parseAmount(document.getElementById('i-amount').value);
   const source = document.getElementById('i-source').value;
   const date = document.getElementById('i-date').value;
   const desc = document.getElementById('i-desc').value.trim();
@@ -2232,7 +2232,7 @@ async function deleteIncome(id) {
 
 // ── Transfers ────────────────────────────────────────────────────────
 async function submitTransfer() {
-  const amount = parseFloat(document.getElementById('t-amount').value);
+  const amount = parseAmount(document.getElementById('t-amount').value);
   const fromRaw = document.getElementById('t-from').value;
   const toRaw   = document.getElementById('t-to').value;
   const date = document.getElementById('t-date').value;
@@ -2414,7 +2414,7 @@ function openEditModal(id) {
   document.getElementById('edit-freq').innerHTML = S.frequencies.map(f => `<option ${f===e.freq?'selected':''}>${f}</option>`).join('');
   fillAccountSelect('edit-account', e.account != null ? Number(e.account) : '');
   document.getElementById('edit-id').value = id;
-  document.getElementById('edit-amount').value = e.amount;
+  document.getElementById('edit-amount').value = formatIndianNumber(e.amount);
   document.getElementById('edit-date').value = e.date;
   document.getElementById('edit-desc').value = e.desc || '';
   ['for','paid','saving'].forEach(g => {
@@ -2433,7 +2433,7 @@ function openEditIncomeModal(id) {
   document.getElementById('edit-source').innerHTML = S.incomeSources.map(s => `<option ${s===i.source?'selected':''}>${s}</option>`).join('');
   fillAccountSelect('edit-account', i.account != null ? Number(i.account) : '');
   document.getElementById('edit-id').value = id;
-  document.getElementById('edit-amount').value = i.amount;
+  document.getElementById('edit-amount').value = formatIndianNumber(i.amount);
   document.getElementById('edit-date').value = i.date;
   document.getElementById('edit-desc').value = i.desc || '';
   document.querySelectorAll('.modal-pill[data-mg="received"]').forEach(p => {
@@ -2468,7 +2468,7 @@ async function saveEdit() {
     if (idx === -1) return;
     const updated = {
       ...S.income[idx],
-      amount: parseFloat(document.getElementById('edit-amount').value),
+      amount: parseAmount(document.getElementById('edit-amount').value),
       source: document.getElementById('edit-source').value,
       date,
       desc: document.getElementById('edit-desc').value.trim(),
@@ -2503,7 +2503,7 @@ async function saveEdit() {
   if (idx === -1) return;
   const updated = {
     ...S.entries[idx],
-    amount: parseFloat(document.getElementById('edit-amount').value),
+    amount: parseAmount(document.getElementById('edit-amount').value),
     category: document.getElementById('edit-cat').value,
     type: document.getElementById('edit-type').value,
     freq: document.getElementById('edit-freq').value,
@@ -3087,7 +3087,7 @@ function renderAccountsList() {
         <div class="acct-row-sub">${a.notes ? a.notes + ' · ' : ''}opened ${a.openingDate || '—'}</div>
         ${isManual ? `
           <div class="acct-mtm">
-            <input type="number" inputmode="decimal" id="mtm-${a.id}" placeholder="Update value (₹)">
+            <input type="text" inputmode="decimal" oninput="onAmountInput(this)" id="mtm-${a.id}" placeholder="Update value (₹)">
             <button onclick="updateAccountValue(${a.id})">Update</button>
           </div>` : ''}
         <div style="display:flex;gap:8px;margin-top:8px">
@@ -3114,9 +3114,9 @@ function openAccountEditor(id) {
   document.getElementById('acct-name').value         = a ? a.name : '';
   document.getElementById('acct-type').value         = a ? a.type : 'Bank';
   document.getElementById('acct-owner').value        = a ? (a.owner || 'Joint') : 'Joint';
-  document.getElementById('acct-opening').value      = a ? a.openingBalance : '';
+  document.getElementById('acct-opening').value      = a ? formatIndianNumber(a.openingBalance) : '';
   document.getElementById('acct-opening-date').value = a ? (a.openingDate || '') : new Date().toISOString().split('T')[0];
-  document.getElementById('acct-current').value      = a && a.currentValue != null ? a.currentValue : '';
+  document.getElementById('acct-current').value      = a && a.currentValue != null ? formatIndianNumber(a.currentValue) : '';
   document.getElementById('acct-notes').value        = a ? (a.notes || '') : '';
   onAccountTypeChange();
 
@@ -3155,10 +3155,10 @@ async function saveAccount() {
   const type = document.getElementById('acct-type').value;
   const owner = document.getElementById('acct-owner').value || 'Joint';
   if (!name) return toast('Enter an account name','err');
-  const opening = parseFloat(document.getElementById('acct-opening').value || '0') || 0;
+  const opening = parseAmount(document.getElementById('acct-opening').value || '0') || 0;
   const openingDate = document.getElementById('acct-opening-date').value || null;
   const currentRaw = document.getElementById('acct-current').value;
-  const currentValue = MANUAL_VALUE_TYPES.has(type) && currentRaw !== '' ? parseFloat(currentRaw) : null;
+  const currentValue = MANUAL_VALUE_TYPES.has(type) && currentRaw !== '' ? parseAmount(currentRaw) : null;
   const notes = document.getElementById('acct-notes').value.trim();
   const isLiability = LIABILITY_TYPES.has(type);
   const editId = document.getElementById('acct-edit-id').value;
@@ -3237,7 +3237,7 @@ async function archiveAccount(id) {
 async function updateAccountValue(id) {
   const inp = document.getElementById('mtm-' + id);
   if (!inp) return;
-  const v = parseFloat(inp.value);
+  const v = parseAmount(inp.value);
   if (isNaN(v)) return toast('Enter a number', 'err');
   const a = S.accounts.find(x => x.id === id);
   if (!a) return;
@@ -3458,6 +3458,34 @@ function dl(blob, name) {
 //  HELPERS
 // ══════════════════════════════════════════════════
 function fmt(n) { return Number(n).toLocaleString('en-IN'); }
+
+// Live amount-input helpers — show Indian (lakh) commas while typing.
+function formatIndianNumber(str) {
+  let s = String(str ?? '').replace(/[^0-9.]/g, '');
+  const dot = s.indexOf('.');
+  if (dot !== -1) s = s.slice(0, dot + 1) + s.slice(dot + 1).replace(/\./g, '');
+  let [intPart, decPart] = s.split('.');
+  intPart = (intPart || '').replace(/^0+(?=\d)/, '');
+  const grouped = intPart ? Number(intPart).toLocaleString('en-IN') : '';
+  if (decPart !== undefined) return (grouped || '0') + '.' + decPart;
+  return grouped;
+}
+
+function parseAmount(str) {
+  const n = parseFloat(String(str ?? '').replace(/,/g, ''));
+  return isNaN(n) ? NaN : n;
+}
+
+function onAmountInput(el) {
+  const digitsBefore = el.value.slice(0, el.selectionStart).replace(/[^0-9]/g, '').length;
+  el.value = formatIndianNumber(el.value);
+  let pos = 0, count = 0;
+  while (pos < el.value.length && count < digitsBefore) {
+    if (el.value[pos] >= '0' && el.value[pos] <= '9') count++;
+    pos++;
+  }
+  el.setSelectionRange(pos, pos);
+}
 
 function fmtDate(s) {
   if (!s) return '';
