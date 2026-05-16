@@ -1213,6 +1213,10 @@ select.modal-input option { background: white; }
       <span id="log-account-banner-text"></span>
       <button onclick="clearLogAccountFilter()" style="margin-left:auto;background:none;border:none;color:var(--amber);font-weight:600;cursor:pointer">✕ Clear</button>
     </div>
+    <div id="log-period-banner" style="display:none;padding:8px 12px;background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:10px;margin:0 0 10px;font-size:12.5px;color:var(--amber);align-items:center;gap:8px">
+      <span id="log-period-banner-text"></span>
+      <button onclick="clearLogPeriodFilter()" style="margin-left:auto;background:none;border:none;color:var(--amber);font-weight:600;cursor:pointer">✕ Clear</button>
+    </div>
     <div class="cat-select-wrap">
       <select id="cat-filter-select" class="cat-filter-select" onchange="setCategoryFilter(this.value)">
         <option value="All">All Categories</option>
@@ -1678,6 +1682,7 @@ let S = {
   logSearch: '',
   logKind: 'All',
   logAccountFilter: null,
+  logPeriod: 'all',
   dashOwner: 'All'
 };
 let currentUser = '';
@@ -2302,6 +2307,7 @@ function setLogAccountFilter(id) {
   S.logKind = 'All';
   S.logFilter = 'All';
   S.logCategoryFilter = 'All';
+  S.logPeriod = 'all';
   document.querySelectorAll('#page-log .log-bar').forEach(bar => {
     bar.querySelectorAll('.log-chip').forEach(c => c.classList.toggle('active', c.dataset.k === 'All' || c.dataset.f === 'All'));
   });
@@ -2312,6 +2318,11 @@ function setLogAccountFilter(id) {
 
 function clearLogAccountFilter() {
   S.logAccountFilter = null;
+  renderLog();
+}
+
+function clearLogPeriodFilter() {
+  S.logPeriod = 'all';
   renderLog();
 }
 
@@ -2326,6 +2337,7 @@ function setLogPersonFilterGo(name, kind) {
   S.logKind = kind || 'All';
   S.logCategoryFilter = 'All';
   S.logAccountFilter = null;
+  S.logPeriod = S.dashPeriod;
   document.querySelectorAll('#page-log .log-bar').forEach(bar => {
     bar.querySelectorAll('.log-chip').forEach(c =>
       c.classList.toggle('active', c.dataset.k === S.logKind || c.dataset.f === name));
@@ -2341,6 +2353,7 @@ function setLogCategoryFilterGo(cat) {
   S.logKind = 'Expense';
   S.logFilter = 'All';
   S.logAccountFilter = null;
+  S.logPeriod = S.dashPeriod;
   document.querySelectorAll('#page-log .log-bar').forEach(bar => {
     bar.querySelectorAll('.log-chip').forEach(c => c.classList.toggle('active', c.dataset.k === 'Expense' || c.dataset.f === 'All'));
   });
@@ -2571,6 +2584,16 @@ function renderLog() {
     acctBanner.style.display = 'none';
   }
 
+  // Show/hide period-filter banner (inherited from a Summary breakdown tap)
+  const periodBanner = document.getElementById('log-period-banner');
+  if (S.logPeriod !== 'all' && S.logPeriod !== 'year') {
+    document.getElementById('log-period-banner-text').textContent =
+      `Showing: ${PERIOD_LABELS[S.logPeriod] || S.logPeriod}`;
+    periodBanner.style.display = 'flex';
+  } else {
+    periodBanner.style.display = 'none';
+  }
+
   // Build merged stream
   const acctName = id => (S.accounts.find(a => a.id === id) || {}).name || '';
   let items = [
@@ -2597,6 +2620,9 @@ function renderLog() {
   }
   if (S.logCategoryFilter !== 'All') {
     items = items.filter(x => x._kind === 'expense' && x.category === S.logCategoryFilter);
+  }
+  if (S.logPeriod !== 'all' && S.logPeriod !== 'year') {
+    items = items.filter(x => inPeriod(x.date, S.logPeriod));
   }
   if (S.logSearch) {
     const q = S.logSearch.toLowerCase();
@@ -2728,18 +2754,21 @@ function setPeriod(p, el) {
   renderDash();
 }
 
-function inPeriod(dateStr) {
+function inPeriod(dateStr, period = S.dashPeriod) {
+  if (period === 'all' || period === 'year') return true;
   if (!dateStr) return false;
   const now = new Date();
   const d = new Date(dateStr + 'T00:00:00');
-  if (S.dashPeriod === 'month')   return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-  if (S.dashPeriod === 'lastmonth') {
+  if (period === 'month')   return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  if (period === 'lastmonth') {
     const lm = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     return d.getMonth() === lm.getMonth() && d.getFullYear() === lm.getFullYear();
   }
-  if (S.dashPeriod === 'quarter') return Math.floor(d.getMonth()/3) === Math.floor(now.getMonth()/3) && d.getFullYear() === now.getFullYear();
+  if (period === 'quarter') return Math.floor(d.getMonth()/3) === Math.floor(now.getMonth()/3) && d.getFullYear() === now.getFullYear();
   return true;
 }
+
+const PERIOD_LABELS = { month: 'This Month', lastmonth: 'Last Month', quarter: 'This Quarter', year: 'Full Year' };
 
 function filteredEntries() { return S.entries.filter(e => inPeriod(e.date)); }
 function filteredIncome()  { return S.income .filter(i => inPeriod(i.date)); }
