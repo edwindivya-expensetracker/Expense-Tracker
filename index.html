@@ -1003,15 +1003,15 @@ select.modal-input option { background: white; }
     <div class="fcard">
       <div class="frow">
         <span class="flabel">Category</span>
-        <select class="finput" id="f-cat"></select>
+        <select class="finput" id="f-cat" onchange="handleAddNew(this,'cat')"></select>
       </div>
       <div class="frow">
         <span class="flabel">Type</span>
-        <select class="finput" id="f-type"></select>
+        <select class="finput" id="f-type" onchange="handleAddNew(this,'type')"></select>
       </div>
       <div class="frow">
         <span class="flabel">Frequency</span>
-        <select class="finput" id="f-freq"></select>
+        <select class="finput" id="f-freq" onchange="handleAddNew(this,'freq')"></select>
       </div>
     </div>
 
@@ -1043,7 +1043,7 @@ select.modal-input option { background: white; }
       </div>
       <div class="frow">
         <span class="flabel">Account</span>
-        <select class="finput" id="f-account" onchange="onPickAccount(this.value, 'paid')"></select>
+        <select class="finput" id="f-account" onchange="if(!handleAddNew(this,'account')) onPickAccount(this.value, 'paid')"></select>
       </div>
       <div class="frow">
         <span class="flabel">Description</span>
@@ -1075,11 +1075,11 @@ select.modal-input option { background: white; }
     <div class="fcard">
       <div class="frow">
         <span class="flabel">Source</span>
-        <select class="finput" id="i-source"></select>
+        <select class="finput" id="i-source" onchange="handleAddNew(this,'src')"></select>
       </div>
       <div class="frow">
         <span class="flabel">Account</span>
-        <select class="finput" id="i-account" onchange="onPickAccount(this.value, 'received')"></select>
+        <select class="finput" id="i-account" onchange="if(!handleAddNew(this,'account')) onPickAccount(this.value, 'received')"></select>
       </div>
     </div>
 
@@ -1878,21 +1878,27 @@ function goPage(name, navEl) {
 //  FORM
 // ══════════════════════════════════════════════════
 function buildSelects() {
+  // Trailing option on Expense/Income dropdowns — selecting it jumps to Config
+  const addOpt = label => `<option value="__add__">＋ Add new ${label}…</option>`;
+
   const cat = document.getElementById('f-cat');
   const freq = S.entries.reduce((m, e) => { m[e.category] = (m[e.category] || 0) + 1; return m; }, {});
   const sorted = [...S.categories].sort((a, b) => (freq[b] || 0) - (freq[a] || 0));
-  cat.innerHTML = '<option value="">Select…</option>' + sorted.map(c => `<option>${c}</option>`).join('');
+  cat.innerHTML = '<option value="">Select…</option>' + sorted.map(c => `<option>${c}</option>`).join('') + addOpt('category');
   const typ = document.getElementById('f-type');
-  typ.innerHTML = '<option value="">Select…</option>' + S.types.map(t => `<option>${t}</option>`).join('');
+  typ.innerHTML = '<option value="">Select…</option>' + S.types.map(t => `<option>${t}</option>`).join('') + addOpt('type');
   const frq = document.getElementById('f-freq');
-  frq.innerHTML = '<option value="">Select…</option>' + S.frequencies.map(f => `<option>${f}</option>`).join('');
+  frq.innerHTML = '<option value="">Select…</option>' + S.frequencies.map(f => `<option>${f}</option>`).join('') + addOpt('frequency');
 
   const acctOpts = '<option value="">— None —</option>' +
     S.accounts.filter(a => !a.archived)
       .map(a => `<option value="${a.id}">${a.name} (${a.owner || 'Joint'})</option>`).join('');
-  ['f-account','i-account','edit-account'].forEach(id => {
-    const el = document.getElementById(id); if (el) el.innerHTML = acctOpts;
+  // Expense/Income account selects get the "add new" shortcut; the edit modal doesn't.
+  ['f-account','i-account'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.innerHTML = acctOpts + addOpt('account');
   });
+  const editAcct = document.getElementById('edit-account');
+  if (editAcct) editAcct.innerHTML = acctOpts;
 
   // Transfer selects need their own placeholder (— Select —) since both are required
   const xferOpts = '<option value="">— Select —</option>' +
@@ -1903,7 +1909,34 @@ function buildSelects() {
   });
 
   const srcSel = document.getElementById('i-source');
-  if (srcSel) srcSel.innerHTML = '<option value="">Select…</option>' + S.incomeSources.map(s => `<option>${s}</option>`).join('');
+  if (srcSel) srcSel.innerHTML = '<option value="">Select…</option>' + S.incomeSources.map(s => `<option>${s}</option>`).join('') + addOpt('source');
+}
+
+// When "＋ Add new…" is chosen in a form dropdown, reset the select and
+// jump to the matching Config section with its add-row already open.
+function handleAddNew(sel, target) {
+  if (sel.value !== '__add__') return false;
+  sel.value = '';
+  jumpToConfigAdd(target);
+  return true;
+}
+
+function jumpToConfigAdd(target) {
+  const navItem = [...document.querySelectorAll('.nav-item')]
+    .find(n => n.querySelector('.nav-label')?.textContent.trim() === 'CONFIG');
+  if (navItem) goPage('cfg', navItem);
+  setTimeout(() => {
+    if (target === 'account') {
+      openAccountEditor();
+      return;
+    }
+    const row = document.getElementById('add-' + target);
+    if (!row) return;
+    row.classList.add('show');
+    row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const inp = document.getElementById('new-' + target);
+    if (inp) inp.focus();
+  }, 80);
 }
 
 function renderIncomeForm() {
