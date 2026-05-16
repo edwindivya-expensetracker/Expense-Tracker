@@ -1265,7 +1265,7 @@ select.modal-input option { background: white; }
 
     <div class="sec-label">Net Worth</div>
     <div class="stat-grid">
-      <div class="stat-card full" style="background:#eef4fb;border-color:#bcd2e6">
+      <div class="stat-card full" style="background:#eef4fb;border-color:#bcd2e6;text-align:center">
         <div class="stat-lbl" style="color:#1a4a7a">Net Worth (today)</div>
         <div class="stat-val" id="d-networth" style="color:#1a4a7a">₹0</div>
         <div class="stat-sub" id="d-networth-sub">No accounts yet</div>
@@ -2854,7 +2854,7 @@ function renderDash() {
   const sumBy = (rows, field, name, valFn) => rows.filter(r => r[field] === name).reduce((s,r) => s + Number(valFn(r)), 0);
   const incByPerson = ['Edwin','Divya'].map(n => [n, sumBy(inc, 'receivedBy', n, i => i.amount)]);
   const expByPaid   = ['Edwin','Divya'].map(n => [n, sumBy(es, 'paidBy', n, e => e.amount)]);
-  document.getElementById('d-cf-income-split').innerHTML = cardSplitHTML([{pairs: incByPerson, link:'Income'}]);
+  document.getElementById('d-cf-income-split').innerHTML = cardSplitHTML([{head:'Earned By', pairs: incByPerson, link:'Income'}]);
   document.getElementById('d-cf-expense-split').innerHTML = cardSplitHTML([
     {head:'Paid By', pairs: expByPaid}
   ]);
