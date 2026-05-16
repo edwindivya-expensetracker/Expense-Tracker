@@ -661,6 +661,20 @@ select.finput option { background: white; color: var(--ink); }
 }
 .stat-sub { font-size: 12px; color: var(--ink3); margin-top: 5px; }
 
+/* Per-person split inside a stat card */
+.card-split { margin-top: 9px; padding-top: 7px; border-top: 1px solid rgba(0,0,0,0.08); }
+.card-split:empty { display: none; }
+.card-split-head { font-size: 9px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink3); font-weight: 700; margin: 5px 0 2px; }
+.card-split-head:first-child { margin-top: 0; }
+.card-split-row { display: flex; justify-content: space-between; gap: 6px; font-size: 11px; padding: 1.5px 0; }
+.csr-name { font-weight: 600; }
+.csr-name.p-edwin { color: var(--blue); }
+.csr-name.p-divya { color: var(--pink); }
+.csr-name.p-aj    { color: var(--teal); }
+.csr-name.p-joint { color: var(--amber); }
+.csr-val { color: var(--ink2); text-align: right; }
+.csr-val .csr-pct { color: var(--ink3); }
+
 /* Bar chart */
 .bar-item { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
 .bar-name { font-size: 12.5px; color: var(--ink2); width: 110px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -1197,11 +1211,13 @@ select.modal-input option { background: white; }
         <div class="stat-lbl">Income</div>
         <div class="stat-val" id="d-cf-income" style="color:var(--green)">₹0</div>
         <div class="stat-sub" id="d-cf-income-sub">0 entries</div>
+        <div class="card-split" id="d-cf-income-split"></div>
       </div>
       <div class="stat-card amber">
         <div class="stat-lbl">Expenses</div>
         <div class="stat-val" id="d-cf-expense">₹0</div>
         <div class="stat-sub" id="d-cf-expense-sub">0 entries</div>
+        <div class="card-split" id="d-cf-expense-split"></div>
       </div>
     </div>
     <div class="stat-grid">
@@ -1218,6 +1234,7 @@ select.modal-input option { background: white; }
         <div class="stat-lbl" style="color:#1a4a7a">Net Worth (today)</div>
         <div class="stat-val" id="d-networth" style="color:#1a4a7a">₹0</div>
         <div class="stat-sub" id="d-networth-sub">No accounts yet</div>
+        <div class="card-split" id="d-networth-split"></div>
       </div>
     </div>
     <div class="stat-grid">
@@ -1225,15 +1242,15 @@ select.modal-input option { background: white; }
         <div class="stat-lbl">Total Assets</div>
         <div class="stat-val" id="d-assets">₹0</div>
         <div class="stat-sub" id="d-assets-sub">0 accounts</div>
+        <div class="card-split" id="d-assets-split"></div>
       </div>
       <div class="stat-card" style="background:#fff0f0;border-color:#ffb3b3">
         <div class="stat-lbl" style="color:#8b0000">Total Liabilities</div>
         <div class="stat-val" id="d-liab" style="color:#c0392b">₹0</div>
         <div class="stat-sub" id="d-liab-sub" style="color:#c0392b">0 accounts</div>
+        <div class="card-split" id="d-liab-split"></div>
       </div>
     </div>
-    <div class="sec-label" id="d-owner-split-label" style="display:none">Net Worth by Owner</div>
-    <div class="fcard" id="d-owner-split" style="padding:4px 16px;display:none"></div>
     <div class="fcard" id="d-accounts-card" style="padding:4px 0;display:none">
       <div id="d-accounts-list"></div>
     </div>
@@ -1244,6 +1261,7 @@ select.modal-input option { background: white; }
         <div class="stat-lbl">Total Spent</div>
         <div class="stat-val" id="d-total">₹0</div>
         <div class="stat-sub" id="d-entries-sub">0 entries</div>
+        <div class="card-split" id="d-total-split"></div>
       </div>
     </div>
     <div class="stat-grid">
@@ -1251,11 +1269,13 @@ select.modal-input option { background: white; }
         <div class="stat-lbl">Saveable</div>
         <div class="stat-val" id="d-save">₹0</div>
         <div class="stat-sub" id="d-save-pct">0% of total</div>
+        <div class="card-split" id="d-save-split"></div>
       </div>
       <div class="stat-card" style="background:#fffbe6;border-color:#ffe58f">
         <div class="stat-lbl" style="color:#8a6d00">Non-Essentials</div>
         <div class="stat-val" id="d-noness" style="color:#8a6d00">₹0</div>
         <div class="stat-sub" id="d-noness-pct" style="color:#b8960a">0% of total</div>
+        <div class="card-split" id="d-noness-split"></div>
       </div>
     </div>
     <div class="stat-grid">
@@ -1263,11 +1283,13 @@ select.modal-input option { background: white; }
         <div class="stat-lbl" style="color:#1a5c35">Essentials</div>
         <div class="stat-val" id="d-ess" style="color:#1a5c35">₹0</div>
         <div class="stat-sub" id="d-ess-pct" style="color:#2e7d52">0% of total</div>
+        <div class="card-split" id="d-ess-split"></div>
       </div>
       <div class="stat-card" style="background:#fff0f0;border-color:#ffb3b3">
         <div class="stat-lbl" style="color:#8b0000">Fun</div>
         <div class="stat-val" id="d-fun" style="color:#c0392b">₹0</div>
         <div class="stat-sub" id="d-fun-pct" style="color:#c0392b">0% of total</div>
+        <div class="card-split" id="d-fun-split"></div>
       </div>
     </div>
 
@@ -1275,12 +1297,6 @@ select.modal-input option { background: white; }
     <div class="fcard" style="padding:16px">
       <div id="d-bars"></div>
     </div>
-
-    <div class="sec-label">Paid By</div>
-    <div class="fcard" style="padding:4px 16px" id="d-paid-list"></div>
-
-    <div class="sec-label">Expense For</div>
-    <div class="fcard" style="padding:4px 16px" id="d-for-list"></div>
     <div style="height:10px"></div>
   </div>
 
@@ -2640,6 +2656,30 @@ function netWorth(ownerFilter) {
 
 function ownerOf(acct) { return acct ? (acct.owner || 'Joint') : null; }
 
+// Build the per-person split shown inside a stat card.
+// groups: [{head?, pairs:[[name,amount],...]}]. Zero rows dropped; % is the
+// row's share of its group total (skipped when the group total isn't positive).
+function cardSplitHTML(groups) {
+  const PCLASS = { Edwin:'p-edwin', Divya:'p-divya', AJ:'p-aj', Joint:'p-joint', Both:'p-joint' };
+  let html = '';
+  groups.forEach(g => {
+    const rows = g.pairs.filter(([,amt]) => Math.round(amt) !== 0);
+    if (!rows.length) return;
+    const denom = rows.reduce((s,[,amt]) => s + amt, 0);
+    if (g.head) html += `<div class="card-split-head">${g.head}</div>`;
+    rows.forEach(([name, amt]) => {
+      const pct = denom > 0 ? Math.round(amt / denom * 100) : null;
+      const disp = name === 'Both' ? 'Joint' : name;
+      html += `<div class="card-split-row">`
+        + `<span class="csr-name ${PCLASS[name] || ''}">${disp}</span>`
+        + `<span class="csr-val">${amt < 0 ? '−' : ''}₹${fmt(Math.abs(Math.round(amt)))}`
+        + (pct != null ? ` <span class="csr-pct">(${pct}%)</span>` : '')
+        + `</span></div>`;
+    });
+  });
+  return html;
+}
+
 function renderDash() {
   // ── Cash Flow (period-aware) ──
   const es = filteredEntries();
@@ -2659,6 +2699,16 @@ function renderDash() {
   netCard.style.background  = net >= 0 ? 'var(--green-bg)' : '#fff0f0';
   netCard.style.borderColor = net >= 0 ? '#a0d4b8' : '#ffb3b3';
 
+  // Income split by who received it; Expenses split both ways (For + Paid By)
+  const sumBy = (rows, field, name, valFn) => rows.filter(r => r[field] === name).reduce((s,r) => s + Number(valFn(r)), 0);
+  const incByPerson = ['Edwin','Divya'].map(n => [n, sumBy(inc, 'receivedBy', n, i => i.amount)]);
+  const expByFor    = ['Edwin','Divya','Both','AJ'].map(n => [n, sumBy(es, 'forWhom', n, e => e.amount)]);
+  const expByPaid   = ['Edwin','Divya'].map(n => [n, sumBy(es, 'paidBy', n, e => e.amount)]);
+  document.getElementById('d-cf-income-split').innerHTML = cardSplitHTML([{pairs: incByPerson}]);
+  document.getElementById('d-cf-expense-split').innerHTML = cardSplitHTML([
+    {head:'For', pairs: expByFor}, {head:'Paid By', pairs: expByPaid}
+  ]);
+
   // ── Net Worth (always today) ──
   const active = S.accounts.filter(a => !a.archived);
   const assetsTotal = active.filter(a => !a.isLiability).reduce((s,a) => s + accountBalance(a), 0);
@@ -2671,30 +2721,15 @@ function renderDash() {
   document.getElementById('d-liab').textContent = '₹' + fmt(Math.round(liabTotal));
   document.getElementById('d-liab-sub').textContent = active.filter(a => a.isLiability).length + ' accounts';
 
-  // Owner split (only when there's at least one account; group by owner)
-  const ownerSplitLabel = document.getElementById('d-owner-split-label');
-  const ownerSplit = document.getElementById('d-owner-split');
-  if (active.length) {
-    const owners = ['Edwin', 'Divya', 'Joint', 'AJ'];
-    const present = owners.filter(o => active.some(a => (a.owner || 'Joint') === o));
-    const ownerColor = { Edwin: 'var(--blue)', Divya: 'var(--pink)', AJ: 'var(--teal)', Joint: 'var(--amber)' };
-    ownerSplit.innerHTML = present.map((o, idx) => {
-      const nw = netWorth(o);
-      const accts = active.filter(a => (a.owner || 'Joint') === o);
-      return `<div class="split-item" ${idx === present.length - 1 ? 'style="border-bottom:none"' : ''}>
-        <div>
-          <div class="split-name" style="color:${ownerColor[o]}">${o}</div>
-          <div class="split-pct">${accts.length} account${accts.length !== 1 ? 's' : ''}</div>
-        </div>
-        <div class="split-amt" style="color:${nw >= 0 ? 'var(--ink)' : 'var(--red)'}">${nw >= 0 ? '₹' : '−₹'}${fmt(Math.abs(Math.round(nw)))}</div>
-      </div>`;
-    }).join('');
-    ownerSplit.style.display = 'block';
-    ownerSplitLabel.style.display = 'block';
-  } else {
-    ownerSplit.style.display = 'none';
-    ownerSplitLabel.style.display = 'none';
-  }
+  // Net-worth / assets / liabilities split by account owner
+  const owners = ['Edwin','Divya','Joint','AJ'];
+  const ownerOwns = a => (a.owner || 'Joint');
+  const nwByOwner     = owners.map(o => [o, netWorth(o)]);
+  const assetsByOwner = owners.map(o => [o, active.filter(a => !a.isLiability && ownerOwns(a) === o).reduce((s,a) => s + accountBalance(a), 0)]);
+  const liabByOwner   = owners.map(o => [o, active.filter(a =>  a.isLiability && ownerOwns(a) === o).reduce((s,a) => s + accountBalance(a), 0)]);
+  document.getElementById('d-networth-split').innerHTML = cardSplitHTML([{pairs: nwByOwner}]);
+  document.getElementById('d-assets-split').innerHTML   = cardSplitHTML([{pairs: assetsByOwner}]);
+  document.getElementById('d-liab-split').innerHTML     = cardSplitHTML([{pairs: liabByOwner}]);
 
   const acctCard = document.getElementById('d-accounts-card');
   const acctList = document.getElementById('d-accounts-list');
@@ -2714,12 +2749,14 @@ function renderDash() {
     acctCard.style.display = 'none';
   }
 
-  // ── Expense breakdown (existing) ──
+  // ── Expense breakdown ──
   const total = expTotal;
-  const saveable = es.filter(e => e.saving === 'Yes').reduce((s,e) => s+Number(e.amount),0);
-  const ess = es.filter(e => e.type === 'Essentials').reduce((s,e) => s+Number(e.amount),0);
-  const noness = es.filter(e => e.type === 'Non-Essentials').reduce((s,e) => s+Number(e.amount),0);
-  const fun = es.filter(e => e.type === 'Fun').reduce((s,e) => s+Number(e.amount),0);
+  const esSave   = es.filter(e => e.saving === 'Yes');
+  const esEss    = es.filter(e => e.type === 'Essentials');
+  const esNon    = es.filter(e => e.type === 'Non-Essentials');
+  const esFun    = es.filter(e => e.type === 'Fun');
+  const sum = arr => arr.reduce((s,e) => s + Number(e.amount), 0);
+  const saveable = sum(esSave), ess = sum(esEss), noness = sum(esNon), fun = sum(esFun);
   const pct = v => total ? Math.round(v/total*100) + '% of total' : '0% of total';
 
   document.getElementById('d-total').textContent = '₹' + fmt(total);
@@ -2732,6 +2769,14 @@ function renderDash() {
   document.getElementById('d-noness-pct').textContent = pct(noness);
   document.getElementById('d-fun').textContent = '₹' + fmt(fun);
   document.getElementById('d-fun-pct').textContent = pct(fun);
+
+  // Each expense-type card gets a "For" split
+  const forSplit = subset => ['Edwin','Divya','Both','AJ'].map(n => [n, sumBy(subset, 'forWhom', n, e => e.amount)]);
+  document.getElementById('d-total-split').innerHTML  = cardSplitHTML([{pairs: forSplit(es)}]);
+  document.getElementById('d-save-split').innerHTML   = cardSplitHTML([{pairs: forSplit(esSave)}]);
+  document.getElementById('d-ess-split').innerHTML    = cardSplitHTML([{pairs: forSplit(esEss)}]);
+  document.getElementById('d-noness-split').innerHTML = cardSplitHTML([{pairs: forSplit(esNon)}]);
+  document.getElementById('d-fun-split').innerHTML    = cardSplitHTML([{pairs: forSplit(esFun)}]);
 
   // Bars
   const catTot = {};
@@ -2746,34 +2791,6 @@ function renderDash() {
           <div class="bar-val" style="width:90px;text-align:right">₹${Math.round(v/1000)}k <span style="color:var(--ink3);font-size:11px">(${total ? Math.round(v/total*100) : 0}%)</span></div>
         </div>`).join('')
     : '<div style="color:var(--ink3);text-align:center;padding:20px 0;font-size:13px">No data for this period</div>';
-
-  // Paid by — sorted descending
-  const paidData = ['Edwin','Divya'].map(name => ({
-    name,
-    val: es.filter(e => e.paidBy === name).reduce((s,e)=>s+Number(e.amount),0)
-  })).sort((a,b) => b.val - a.val);
-  document.getElementById('d-paid-list').innerHTML = paidData.map((p,i) => `
-    <div class="split-item" ${i===paidData.length-1?'style="border-bottom:none"':''}>
-      <div>
-        <div class="split-name">${p.name}</div>
-        <div class="split-pct">${total ? Math.round(p.val/total*100) : 0}%</div>
-      </div>
-      <div class="split-amt">₹${fmt(p.val)}</div>
-    </div>`).join('');
-
-  // For whom — sorted descending
-  const forData = ['Both','Edwin','Divya','AJ'].map(name => ({
-    name,
-    val: es.filter(e => e.forWhom === name).reduce((s,e)=>s+Number(e.amount),0)
-  })).sort((a,b) => b.val - a.val);
-  document.getElementById('d-for-list').innerHTML = forData.map((p,i) => `
-    <div class="split-item" ${i===forData.length-1?'style="border-bottom:none"':''}>
-      <div>
-        <div class="split-name">${p.name}</div>
-        <div class="split-pct">${total ? Math.round(p.val/total*100) : 0}%</div>
-      </div>
-      <div class="split-amt">₹${fmt(p.val)}</div>
-    </div>`).join('');
 }
 
 // ══════════════════════════════════════════════════
