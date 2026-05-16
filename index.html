@@ -717,6 +717,11 @@ select.finput option { background: white; color: var(--ink); }
   background: var(--bg);
 }
 .cfg-count { font-size: 11px; color: var(--ink3); font-weight: 400; }
+.cfg-card.collapsible > .cfg-head { cursor: pointer; user-select: none; }
+.cfg-chevron { font-size: 11px; color: var(--ink3); transition: transform .15s ease; }
+.cfg-card.collapsed > .cfg-head { border-bottom: none; }
+.cfg-card.collapsed > .cfg-head .cfg-chevron { transform: rotate(-90deg); }
+.cfg-card.collapsed > *:not(.cfg-head) { display: none; }
 .cfg-item {
   display: flex;
   align-items: center;
@@ -1320,8 +1325,11 @@ select.modal-input option { background: white; }
 
     <!-- Categories -->
     <div class="sec-label">Expense Categories</div>
-    <div class="cfg-card">
-      <div class="cfg-head">Categories <span class="cfg-count" id="cat-count"></span></div>
+    <div class="cfg-card collapsible collapsed">
+      <div class="cfg-head" onclick="toggleCfgCard(this)">
+        <span>Categories <span class="cfg-count" id="cat-count"></span></span>
+        <span class="cfg-chevron">▾</span>
+      </div>
       <div id="cfg-cat-list"></div>
       <div class="btn-add-row" onclick="toggleAddRow('cat')">
         <div class="add-icon">+</div> Add Category
@@ -1334,8 +1342,11 @@ select.modal-input option { background: white; }
 
     <!-- Types -->
     <div class="sec-label">Expense Types</div>
-    <div class="cfg-card">
-      <div class="cfg-head">Types</div>
+    <div class="cfg-card collapsible collapsed">
+      <div class="cfg-head" onclick="toggleCfgCard(this)">
+        <span>Types</span>
+        <span class="cfg-chevron">▾</span>
+      </div>
       <div id="cfg-type-list"></div>
       <div class="btn-add-row" onclick="toggleAddRow('type')">
         <div class="add-icon">+</div> Add Type
@@ -1348,8 +1359,11 @@ select.modal-input option { background: white; }
 
     <!-- Frequencies -->
     <div class="sec-label">Frequencies</div>
-    <div class="cfg-card">
-      <div class="cfg-head">Frequencies</div>
+    <div class="cfg-card collapsible collapsed">
+      <div class="cfg-head" onclick="toggleCfgCard(this)">
+        <span>Frequencies</span>
+        <span class="cfg-chevron">▾</span>
+      </div>
       <div id="cfg-freq-list"></div>
       <div class="btn-add-row" onclick="toggleAddRow('freq')">
         <div class="add-icon">+</div> Add Frequency
@@ -1362,8 +1376,11 @@ select.modal-input option { background: white; }
 
     <!-- Income Sources -->
     <div class="sec-label">Income Sources</div>
-    <div class="cfg-card">
-      <div class="cfg-head">Sources <span class="cfg-count" id="src-count"></span></div>
+    <div class="cfg-card collapsible collapsed">
+      <div class="cfg-head" onclick="toggleCfgCard(this)">
+        <span>Sources <span class="cfg-count" id="src-count"></span></span>
+        <span class="cfg-chevron">▾</span>
+      </div>
       <div id="cfg-src-list"></div>
       <div class="btn-add-row" onclick="toggleAddRow('src')">
         <div class="add-icon">+</div> Add Source
@@ -1376,8 +1393,11 @@ select.modal-input option { background: white; }
 
     <!-- Accounts -->
     <div class="sec-label">Accounts & Balances</div>
-    <div class="cfg-card">
-      <div class="cfg-head">Accounts <span class="cfg-count" id="acct-count"></span></div>
+    <div class="cfg-card collapsible collapsed">
+      <div class="cfg-head" onclick="toggleCfgCard(this)">
+        <span>Accounts <span class="cfg-count" id="acct-count"></span></span>
+        <span class="cfg-chevron">▾</span>
+      </div>
       <div id="cfg-acct-list"></div>
       <div class="btn-add-row" onclick="openAccountEditor()">
         <div class="add-icon">+</div> Add Account
@@ -2875,6 +2895,10 @@ function delCfgItem(key, i) {
   saveLocal();
   buildSelects();
   renderCfg();
+}
+
+function toggleCfgCard(head) {
+  head.parentElement.classList.toggle('collapsed');
 }
 
 function toggleAddRow(key) {
