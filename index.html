@@ -1200,6 +1200,9 @@ select.modal-input option { background: white; }
 
   <!-- LOG PAGE -->
   <div id="page-log" class="page">
+    <div id="log-back-banner" onclick="returnToSummary()" style="display:none;padding:10px 14px;background:var(--blue-bg);border:1px solid #b0cce8;border-radius:10px;margin:14px 0 0;font-size:13px;color:var(--blue);font-weight:600;cursor:pointer;align-items:center;gap:6px">
+      ← Back to Summary
+    </div>
     <div class="log-bar">
       <div class="log-chip active" data-k="All" onclick="setLogKind(this)">All</div>
       <div class="log-chip" data-k="Expense" onclick="setLogKind(this)">Expense</div>
@@ -1695,6 +1698,7 @@ let S = {
   logType: 'All',
   logAccountFilter: null,
   logPeriod: 'all',
+  logReturnAnchor: null,
   dashOwner: 'All'
 };
 let currentUser = '';
@@ -1948,6 +1952,8 @@ function goPage(name, navEl) {
   document.getElementById('page-' + name).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   navEl.classList.add('active');
+  // The "Back to Summary" link is only valid while still on the Log
+  if (name !== 'log') S.logReturnAnchor = null;
   if (name === 'log') renderLog();
   if (name === 'dash') renderDash();
   if (name === 'cfg') renderCfg();
@@ -2327,6 +2333,19 @@ function goToLog() {
   if (navItem) goPage('log', navItem); else renderLog();
 }
 
+// Return to the Summary card the user drilled in from, and scroll to it
+function returnToSummary() {
+  const anchor = S.logReturnAnchor;
+  const navItem = [...document.querySelectorAll('.nav-item')]
+    .find(n => n.querySelector('.nav-label')?.textContent.trim() === 'SUMMARY');
+  if (navItem) goPage('dash', navItem); else renderDash();
+  setTimeout(() => {
+    const el = document.getElementById(anchor);
+    if (el) (el.closest('.stat-card') || el.closest('.fcard') || el)
+      .scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 80);
+}
+
 function setLogAccountFilter(id) {
   S.logAccountFilter = id;
   S.logKind = 'All';
@@ -2334,6 +2353,7 @@ function setLogAccountFilter(id) {
   S.logType = 'All';
   S.logCategoryFilter = 'All';
   S.logPeriod = 'all';
+  S.logReturnAnchor = 'd-accounts-card';
   goToLog();
 }
 
@@ -2353,13 +2373,14 @@ function setCategoryFilter(val) {
 }
 
 // Tapping a person row in a Summary split jumps to the Log filtered to them
-function setLogPersonFilterGo(name, kind, type) {
+function setLogPersonFilterGo(name, kind, type, anchor) {
   S.logFilter = name;
   S.logKind = kind || 'All';
   S.logType = type || 'All';
   S.logCategoryFilter = 'All';
   S.logAccountFilter = null;
   S.logPeriod = S.dashPeriod;
+  S.logReturnAnchor = anchor || null;
   goToLog();
 }
 
@@ -2371,6 +2392,7 @@ function setLogCategoryFilterGo(cat) {
   S.logType = 'All';
   S.logAccountFilter = null;
   S.logPeriod = S.dashPeriod;
+  S.logReturnAnchor = 'd-bars';
   goToLog();
 }
 
@@ -2578,6 +2600,7 @@ function clearLogSearch() {
 
 function renderLog() {
   renderCategoryBar();
+  document.getElementById('log-back-banner').style.display = S.logReturnAnchor ? 'flex' : 'none';
   // Keep all filter chips in sync with state (covers Summary drill-downs)
   document.querySelectorAll('#page-log .log-chip').forEach(c => {
     let on = false;
@@ -2843,7 +2866,7 @@ function cardSplitHTML(groups) {
     rows.forEach(([name, amt]) => {
       const pct = denom > 0 ? Math.round(amt / denom * 100) : null;
       const disp = name === 'Both' ? 'Joint' : name;
-      const tap = g.link ? ` onclick="setLogPersonFilterGo('${name}','${g.link}','${g.linkType || ''}')" style="cursor:pointer"` : '';
+      const tap = g.link ? ` onclick="setLogPersonFilterGo('${name}','${g.link}','${g.linkType || ''}','${g.anchor || ''}')" style="cursor:pointer"` : '';
       html += `<div class="card-split-row"${tap}>`
         + `<span class="csr-name ${PCLASS[name] || ''}">${disp}</span>`
         + `<span class="csr-val">${amt < 0 ? '−' : ''}₹${fmt(Math.abs(Math.round(amt)))}`
@@ -2878,7 +2901,7 @@ function renderDash() {
   const sumBy = (rows, field, name, valFn) => rows.filter(r => r[field] === name).reduce((s,r) => s + Number(valFn(r)), 0);
   const incByPerson = ['Edwin','Divya'].map(n => [n, sumBy(inc, 'receivedBy', n, i => i.amount)]);
   const expByPaid   = ['Edwin','Divya'].map(n => [n, sumBy(es, 'paidBy', n, e => e.amount)]);
-  document.getElementById('d-cf-income-split').innerHTML = cardSplitHTML([{head:'Earned By', pairs: incByPerson, link:'Income'}]);
+  document.getElementById('d-cf-income-split').innerHTML = cardSplitHTML([{head:'Earned By', pairs: incByPerson, link:'Income', anchor:'d-cf-income-split'}]);
   document.getElementById('d-cf-expense-split').innerHTML = cardSplitHTML([
     {head:'Paid By', pairs: expByPaid}
   ]);
@@ -2970,11 +2993,11 @@ function renderDash() {
 
   // Each expense-type card gets a "For" split
   const forSplit = subset => ['Edwin','Divya','Both','AJ'].map(n => [n, sumBy(subset, 'forWhom', n, e => e.amount)]);
-  document.getElementById('d-total-split').innerHTML  = cardSplitHTML([{pairs: forSplit(es),     link:'Expense'}]);
-  document.getElementById('d-save-split').innerHTML   = cardSplitHTML([{pairs: forSplit(esSave), link:'Expense', linkType:'Saveable'}]);
-  document.getElementById('d-ess-split').innerHTML    = cardSplitHTML([{pairs: forSplit(esEss),  link:'Expense', linkType:'Essentials'}]);
-  document.getElementById('d-noness-split').innerHTML = cardSplitHTML([{pairs: forSplit(esNon),  link:'Expense', linkType:'Non-Essentials'}]);
-  document.getElementById('d-fun-split').innerHTML    = cardSplitHTML([{pairs: forSplit(esFun),  link:'Expense', linkType:'Fun'}]);
+  document.getElementById('d-total-split').innerHTML  = cardSplitHTML([{pairs: forSplit(es),     link:'Expense', anchor:'d-total-split'}]);
+  document.getElementById('d-save-split').innerHTML   = cardSplitHTML([{pairs: forSplit(esSave), link:'Expense', linkType:'Saveable',       anchor:'d-save-split'}]);
+  document.getElementById('d-ess-split').innerHTML    = cardSplitHTML([{pairs: forSplit(esEss),  link:'Expense', linkType:'Essentials',     anchor:'d-ess-split'}]);
+  document.getElementById('d-noness-split').innerHTML = cardSplitHTML([{pairs: forSplit(esNon),  link:'Expense', linkType:'Non-Essentials', anchor:'d-noness-split'}]);
+  document.getElementById('d-fun-split').innerHTML    = cardSplitHTML([{pairs: forSplit(esFun),  link:'Expense', linkType:'Fun',            anchor:'d-fun-split'}]);
 
   // Bars
   const catTot = {};
